@@ -1,5 +1,8 @@
-﻿namespace Essentials.Enums
+﻿using System;
+
+namespace Essentials.Enums
 {
+    [Obsolete("Use RpcCalls instead", true)]
     public enum AmongUsRpc : byte
     {
         PlayAnimation = 0,

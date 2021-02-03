@@ -287,7 +287,7 @@ namespace Essentials.CustomOptions
             {
                 if (PlayerControl.AllPlayerControls.Count < 2 || !AmongUsClient.Instance || !PlayerControl.LocalPlayer || !AmongUsClient.Instance.AmHost) return;
 
-                PlayerControl.LocalPlayer.Send<Rpc>(new Rpc.Data(Options));
+                Rpc.Instance.Send(new Rpc.Data(Options));
             }
         }
     }

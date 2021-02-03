@@ -7,6 +7,7 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
 using System.Reflection;
+using UnityEngine;
 using Object = UnityEngine.Object;
 
 namespace Essentials.CustomOptions
@@ -35,7 +36,7 @@ namespace Essentials.CustomOptions
         /// <summary>
         /// The list of all the added custom options
         /// </summary>
-        public static List<CustomOption> Options = new List<CustomOption>();
+        private static List<CustomOption> Options = new List<CustomOption>();
 
         /// <summary>
         /// Enables or disables the credit string appended to the option list in the lobby screen.
@@ -392,7 +393,7 @@ namespace Essentials.CustomOptions
                 {
                     if (report && AmongUsClient.Instance && PlayerControl.LocalPlayer && AmongUsClient.Instance.AmHost)
                     {
-                        PlayerControl.LocalPlayer.Send<Rpc>(new Rpc.Data(option));
+                        Rpc.Instance.Send(new Rpc.Data(option));
 
                         option.ConfigEntry.Value = newValue;
                     }
@@ -478,7 +479,7 @@ namespace Essentials.CustomOptions
 
             Value = value;
 
-            if (GameSetting != null && AmongUsClient.Instance && PlayerControl.LocalPlayer && AmongUsClient.Instance.AmHost) PlayerControl.LocalPlayer.Send<Rpc>(new Rpc.Data(this));
+            if (GameSetting != null && AmongUsClient.Instance && PlayerControl.LocalPlayer && AmongUsClient.Instance.AmHost) Rpc.Instance.Send(new Rpc.Data(this));
 
             try
             {
@@ -486,7 +487,8 @@ namespace Essentials.CustomOptions
                 {
                     bool newValue = (bool)Value;
 
-                    toggle.CheckMark.enabled = toggle.oldValue = newValue;
+                    toggle.oldValue = newValue;
+                    if (toggle.CheckMark != null) toggle.CheckMark.enabled = newValue;
                 }
                 else if (GameSetting is NumberOption number)
                 {
@@ -734,7 +736,7 @@ namespace Essentials.CustomOptions
         /// </summary>
         public void Increase()
         {
-            SetValue(Math.Min(GetValue() + Increment, Max));
+            SetValue(GetValue() + Increment);
         }
 
         /// <summary>
@@ -742,12 +744,12 @@ namespace Essentials.CustomOptions
         /// </summary>
         public void Decrease()
         {
-            SetValue(Math.Max(GetValue() - Increment, Min));
+            SetValue(GetValue() - Increment);
         }
 
         private void SetValue(float value, bool raiseEvents)
         {
-            value = Math.Min(Math.Max(value, Min), Max);
+            value = Mathf.Clamp(value, Min, Max);
 
             base.SetValue(value, raiseEvents);
         }

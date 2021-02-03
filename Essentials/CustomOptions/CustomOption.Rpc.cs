@@ -9,8 +9,10 @@ namespace Essentials.CustomOptions
     public partial class CustomOption
     {
         [RegisterCustomRpc]
-        private protected class Rpc : CustomRpc<EssentialsPlugin, PlayerControl, Rpc.Data>
+        private protected class Rpc : PlayerCustomRpc<EssentialsPlugin, Rpc.Data>
         {
+            public static Rpc Instance { get { return Rpc<Rpc>.Instance; } }
+
             public Rpc(EssentialsPlugin plugin) : base(plugin)
             {
             }
@@ -79,10 +81,13 @@ namespace Essentials.CustomOptions
                 if (Debug) EssentialsPlugin.Logger.LogInfo($"{innerNetObject.Data.PlayerName} sent options:");
                 foreach ((string ID, CustomOptionType Type, object Value) option in data.Options)
                 {
-                    if (Debug) EssentialsPlugin.Logger.LogInfo($"\"{option.ID}\" type: {option.Type}, value: {option}");
-
                     CustomOption customOption = Options.FirstOrDefault(o => o.ID.Equals(option.ID, StringComparison.Ordinal));
+
+                    if (Debug) EssentialsPlugin.Logger.LogInfo($"\"{option.ID}\" type: {option.Type}, value: {option.Value}, match: {customOption != null}, current value: {(customOption != null ? customOption.Value : "Unknown")}");
+
                     customOption?.SetValue(option.Value, true);
+
+                    if (Debug && customOption != null) EssentialsPlugin.Logger.LogInfo($"\"{option.ID}\", set value: {customOption.Value}");
                 }
             }
         }
