@@ -8,7 +8,7 @@ namespace Essentials.Extensions
     {
         public static bool CompareName(this GameObject a, GameObject b)
         {
-            return a == b || a != null & b != null && a.name != null && b.name != null && a.name.Length == b.name.Length && a.name.Equals(b.name, StringComparison.Ordinal);
+            return a == b || a != null && b != null && a.name != null && b.name != null && a.name.Length == b.name.Length && a.name.Equals(b.name, StringComparison.Ordinal);
         }
 
         public static bool CompareName(this OptionBehaviour a, OptionBehaviour b)
