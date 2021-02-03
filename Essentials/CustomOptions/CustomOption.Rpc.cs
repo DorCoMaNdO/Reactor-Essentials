@@ -74,13 +74,15 @@ namespace Essentials.CustomOptions
 
             public override void Handle(PlayerControl innerNetObject, Data data)
             {
-                Plugin.Log.LogWarning($"{innerNetObject.Data.PlayerName} sent options:");
+                if (innerNetObject?.Data == null || data.Options == null) return;
+
+                if (Debug) EssentialsPlugin.Logger.LogInfo($"{innerNetObject.Data.PlayerName} sent options:");
                 foreach ((string ID, CustomOptionType Type, object Value) option in data.Options)
                 {
-                    Plugin.Log.LogWarning($"\"{option.ID}\" type: {option.Type}, value: {option}");
+                    if (Debug) EssentialsPlugin.Logger.LogInfo($"\"{option.ID}\" type: {option.Type}, value: {option}");
 
-                    CustomOption customOption = CustomOption.Options.FirstOrDefault(o => o.ID.Equals(option.ID, StringComparison.Ordinal));
-                    customOption?.SetValue(option.Value, false);
+                    CustomOption customOption = Options.FirstOrDefault(o => o.ID.Equals(option.ID, StringComparison.Ordinal));
+                    customOption?.SetValue(option.Value, true);
                 }
             }
         }

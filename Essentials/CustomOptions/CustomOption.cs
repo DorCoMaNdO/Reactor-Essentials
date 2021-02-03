@@ -44,6 +44,11 @@ namespace Essentials.CustomOptions
         public static bool ShamelessPlug = true;
 
         /// <summary>
+        /// Enables debug logging messages.
+        /// </summary>
+        public static bool Debug = false;
+
+        /// <summary>
         /// The ID of the plugin that created the option.
         /// </summary>
         public readonly string PluginID;
@@ -197,7 +202,7 @@ namespace Essentials.CustomOptions
         }
 
         /// <summary>
-        /// Gets the "Id" string provided to the first derivative of <see cref="BasePlugin"/> with the attribute <see cref="BepInPlugin"/> in the current call stack.
+        /// Gets the "Id" string provided to the first derivative class of <see cref="BasePlugin"/> with the attribute <see cref="BepInPlugin"/> in the current call stack.
         /// </summary>
         /// <returns>A plugin id or <see cref="string.Empty"/></returns>
         private static string GetCallingPluginId()
