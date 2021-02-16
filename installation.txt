@@ -1,0 +1,6 @@
+1. Download the most recent .dll file from https://github.com/DorCoMaNdO/Reactor-Essentials/releases
+2. Put the file in your Among Us/BepInEx/plugins folder
+3. Open your Among Us mod project
+4. In your project view, right click on dependencies and click 'add project reference'
+5. Browse to the dll location and select it. Make sure the box is checked and press 'OK.'
+6. You should now be able to use the Reactor-Essentials project. To make sure the plugin exists at runtime, add [BepInDependency(Essentials.EssentialsPlugin)] just above your class declaration
