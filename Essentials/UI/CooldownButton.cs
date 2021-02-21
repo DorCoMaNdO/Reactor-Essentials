@@ -77,7 +77,7 @@ namespace Essentials.UI
         /// <summary>
         /// Call in HudManager.Start
         /// </summary>
-        private CooldownButton(Assembly asm, Action onClick, float cooldown, string embeddedResourcePath/*, float pixelsPerUnit*/, Vector2 positionOffset, ButtonCategory category, HudManager hudManager, bool hasEffectDuration, float effectDuration, Action onEffectEnd)
+        private CooldownButton(Assembly asm, Action onClick, float cooldown, string embeddedResourcePath/*, float pixelsPerUnit*/, Vector2 positionOffset, ButtonCategory category, bool hasEffectDuration, float effectDuration, Action onEffectEnd)
         {
             OnEffectEnd = onEffectEnd;
             PositionOffset = positionOffset;
@@ -95,7 +95,7 @@ namespace Essentials.UI
 
             Stream resourceStream = asm.GetManifestResourceStream(embeddedResourceFullPath);
 
-            KillButtonManager = Object.Instantiate(hudManager.KillButton, hudManager.transform);
+            KillButtonManager = Object.Instantiate(HudManager.Instance.KillButton, HudManager.Instance.transform);
 
             //StartColorButton = killButtonManager.renderer.color;
             StartColorText = KillButtonManager.TimerText.Color;
@@ -133,14 +133,14 @@ namespace Essentials.UI
         /// <summary>
         /// Call in HudManager.Start
         /// </summary>
-        public CooldownButton(Action onClick, float cooldown, string imageEmbededResourcePath, Vector2 positionOffset, ButtonCategory category, HudManager hudManager, float effectDuration, Action onEffectEnd) : this(Assembly.GetCallingAssembly(), onClick, cooldown, imageEmbededResourcePath, positionOffset, category, hudManager, true, effectDuration, onEffectEnd)
+        public CooldownButton(Action onClick, float cooldown, string imageEmbededResourcePath, Vector2 positionOffset, ButtonCategory category, float effectDuration, Action onEffectEnd) : this(Assembly.GetCallingAssembly(), onClick, cooldown, imageEmbededResourcePath, positionOffset, category, true, effectDuration, onEffectEnd)
         {
         }
 
         /// <summary>
         /// Call in HudManager.Start
         /// </summary>
-        public CooldownButton(Action onClick, float cooldown, string imageEmbededResourcePath, Vector2 positionOffset, ButtonCategory category, HudManager hudManager) : this(Assembly.GetCallingAssembly(), onClick, cooldown, imageEmbededResourcePath, positionOffset, category, hudManager, false, 0F, null)
+        public CooldownButton(Action onClick, float cooldown, string imageEmbededResourcePath, Vector2 positionOffset, ButtonCategory category) : this(Assembly.GetCallingAssembly(), onClick, cooldown, imageEmbededResourcePath, positionOffset, category, false, 0F, null)
         {
         }
 
@@ -173,12 +173,13 @@ namespace Essentials.UI
             return true;
         }
 
-        [HarmonyPatch(typeof(HudManager), "Update")]
+        [HarmonyPatch(typeof(HudManager), nameof(HudManager.Update))]
         private static class HudUpdatePatch
         {
             public static void Postfix()
             {
                 Buttons.RemoveAll(item => item.KillButtonManager == null);
+
                 for (int i = 0; i < Buttons.Count; i++)
                 {
                     try

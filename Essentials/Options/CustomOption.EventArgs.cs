@@ -3,9 +3,8 @@ using System.Collections.Generic;
 using System.ComponentModel;
 using System.Text;
 
-namespace Essentials.CustomOptions
+namespace Essentials.Options
 {
-    [Obsolete("Everything to do with custom options has moved from Essentials.CustomOptions to Essentials.Options, please update the namespace reference.")]
     public class OptionOnValueChangedEventArgs : CancelEventArgs
     {
         public object Value { get; set; }
@@ -18,7 +17,6 @@ namespace Essentials.CustomOptions
         }
     }
 
-    [Obsolete("Everything to do with custom options has moved from Essentials.CustomOptions to Essentials.Options, please update the namespace reference.", true)]
     public class ToggleOptionOnValueChangedEventArgs : OptionOnValueChangedEventArgs
     {
         public new bool Value { get { return (bool)base.Value; } set { Value = value; } }
@@ -29,7 +27,6 @@ namespace Essentials.CustomOptions
         }
     }
 
-    [Obsolete("Everything to do with custom options has moved from Essentials.CustomOptions to Essentials.Options, please update the namespace reference.", true)]
     public class NumberOptionOnValueChangedEventArgs : OptionOnValueChangedEventArgs
     {
         public new float Value { get { return (float)base.Value; } set { Value = value; } }
@@ -40,7 +37,6 @@ namespace Essentials.CustomOptions
         }
     }
 
-    [Obsolete("Everything to do with custom options has moved from Essentials.CustomOptions to Essentials.Options, please update the namespace reference.", true)]
     public class StringOptionOnValueChangedEventArgs : OptionOnValueChangedEventArgs
     {
         public new int Value { get { return (int)base.Value; } set { Value = value; } }
@@ -51,7 +47,6 @@ namespace Essentials.CustomOptions
         }
     }
 
-    [Obsolete("Everything to do with custom options has moved from Essentials.CustomOptions to Essentials.Options, please update the namespace reference.")]
     public class OptionValueChangedEventArgs : EventArgs
     {
         public readonly object OldValue;
@@ -64,7 +59,6 @@ namespace Essentials.CustomOptions
         }
     }
 
-    [Obsolete("Everything to do with custom options has moved from Essentials.CustomOptions to Essentials.Options, please update the namespace reference.", true)]
     public class ToggleOptionValueChangedEventArgs : OptionValueChangedEventArgs
     {
         public new bool OldValue { get { return (bool)base.OldValue; } }
@@ -75,7 +69,6 @@ namespace Essentials.CustomOptions
         }
     }
 
-    [Obsolete("Everything to do with custom options has moved from Essentials.CustomOptions to Essentials.Options, please update the namespace reference.", true)]
     public class NumberOptionValueChangedEventArgs : OptionValueChangedEventArgs
     {
         public new float OldValue { get { return (float)base.OldValue; } }
@@ -86,7 +79,6 @@ namespace Essentials.CustomOptions
         }
     }
 
-    [Obsolete("Everything to do with custom options has moved from Essentials.CustomOptions to Essentials.Options, please update the namespace reference.", true)]
     public class StringOptionValueChangedEventArgs : OptionValueChangedEventArgs
     {
         public new int OldValue { get { return (int)base.OldValue; } }

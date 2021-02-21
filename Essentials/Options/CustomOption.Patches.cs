@@ -7,7 +7,7 @@ using UnhollowerBaseLib;
 using UnityEngine;
 using Object = UnityEngine.Object;
 
-namespace Essentials.CustomOptions
+namespace Essentials.Options
 {
     public partial class CustomOption
     {
@@ -46,7 +46,7 @@ namespace Essentials.CustomOptions
 
                     options.Add(toggle);
 
-                    EssentialsPlugin.Logger.LogInfo($"Option \"{option.Name}\" was created");
+                    if (Debug) EssentialsPlugin.Logger.LogInfo($"Option \"{option.Name}\" was created");
                 }
                 else if (option.Type == CustomOptionType.Number)
                 {
@@ -60,7 +60,7 @@ namespace Essentials.CustomOptions
 
                     options.Add(number);
 
-                    EssentialsPlugin.Logger.LogInfo($"Option \"{option.Name}\" was created");
+                    if (Debug) EssentialsPlugin.Logger.LogInfo($"Option \"{option.Name}\" was created");
                 }
                 else if (option.Type == CustomOptionType.String)
                 {
@@ -82,7 +82,7 @@ namespace Essentials.CustomOptions
 
                     //    options.Add(kv);
 
-                    //    EssentialsPlugin.Logger.LogInfo($"Option \"{option.Name}\" was created");
+                    //    if (Debug) EssentialsPlugin.Logger.LogInfo($"Option \"{option.Name}\" was created");
                     //}
 
                     if (stringOption == null) continue;
@@ -95,7 +95,7 @@ namespace Essentials.CustomOptions
 
                     options.Add(str);
 
-                    EssentialsPlugin.Logger.LogInfo($"Option \"{option.Name}\" was created");
+                    if (Debug) EssentialsPlugin.Logger.LogInfo($"Option \"{option.Name}\" was created");
                 }
             }
 
@@ -288,6 +288,15 @@ namespace Essentials.CustomOptions
                 if (PlayerControl.AllPlayerControls.Count < 2 || !AmongUsClient.Instance || !PlayerControl.LocalPlayer || !AmongUsClient.Instance.AmHost) return;
 
                 Rpc.Instance.Send(new Rpc.Data(Options));
+            }
+        }
+
+        [HarmonyPatch(typeof(HudManager), nameof(HudManager.Update))]
+        private class HudManagerUpdate
+        {
+            public static void Prefix(HudManager __instance)
+            {
+                __instance.GameSettings.scale = 0.5f; // make configurable/dynamic
             }
         }
     }

@@ -4,7 +4,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 
-namespace Essentials.CustomOptions
+namespace Essentials.Options
 {
     public partial class CustomOption
     {
@@ -17,7 +17,7 @@ namespace Essentials.CustomOptions
             {
             }
 
-            public struct Data
+            internal struct Data
             {
                 public readonly (string ID, CustomOptionType Type, object Value)[] Options;
 
