@@ -1,7 +1,9 @@
-﻿using UnityEngine;
+﻿using System;
+using UnityEngine;
 
 namespace Essentials.Constants
 {
+    [Obsolete("Performance difference tested to be mostly insignificant, use Palette instead", true)]
     public static class AmongUsPalette
     {
         public static readonly Color DisabledGrey = new Color(0.3f, 0.3f, 0.3f, 1f);
