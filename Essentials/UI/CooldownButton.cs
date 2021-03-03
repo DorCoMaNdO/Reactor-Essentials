@@ -1,295 +1,226 @@
 /*
-HOW TO USE: (reactor is recommended)
-1. Copy the code in this file (not including this comment) to CooldownButton.cs
-2. Get an image for your button (150 x 150 pixels is recommended) and add it to the VS solution. Make sure the 'Build Action' of the image in VS is 'Embedded resource'
+HOW TO USE:
+1. Copy the code in this file to CooldownButton.cs
+2. Get an image for your button in .png format (100 x 100 pixels is recommended) and add it to the Project resources (https://www.youtube.com/watch?v=lKKNwK0ysPY) as a file (NOT AS AN IMAGE!!!).
 3. Make a button patch. This one will make a button in the bottom left of the screen that prints 'PRESS' on press, everyone can press it and has a cooldown of 5 seconds.
 ```
-[HarmonyPatch(typeof(HudManager), nameof(HudManager.Start))]
-public static class ExampleButton
+using Reactor.Extensions;
+using Reactor.Unstrip;
+using Reactor.Button;
+using UnityEngine;
+using HarmonyLib;
+namespace YourCoolMod
 {
-    private static CooldownButton btn;
-
-    public static void Postfix(HudManager __instance)
+    [HarmonyPatch(typeof(HudManager), nameof(HudManager.Start))]
+    public static class ExampleButton
     {
-        btn = new CooldownButton(
-            () =>
-            {
-                // Restores the cooldown
-                btn.Timer = btn.MaxTimer;
-
-                System.Console.WriteLine("PRESS");
-            },
-            5f,
-            "<BUTTON NAMESPACE>.<IMAGE FILE NAME (with file extension)>",
-            0.25f,
-            new Vector2(0.125f, 0.125f),
-            CooldownButton.Category.Everyone,
-            __instance
-        );
+        private static CooldownButton btn;
+        public static void Postfix(HudManager __instance)
+        {
+            btn = new CooldownButton(
+                () =>
+                {
+                    btn.Timer = btn.MaxTimer; // Reset the cooldown
+                    // Do cool stuff when the button is pressed
+                    System.Console.WriteLine("PRESS");
+                },
+                5f, // The cooldown for this button is five seconds
+                Properties.Resources.yournamehere, // change yournamehere to the name you set in step 2
+                new Vector2(0.125f, 0.125f), // The position of the button, 1 unit is 100 pixels
+                () => 
+                {
+                    // Who has access to the button? This allows alive crewmates to use the new button while the game is started
+                    return PlayerControl.LocalPlayer.Data && !PlayerControl.LocalPlayer.Data.IsDead && !PlayerControl.LocalPlayer.Data.IsImpostor && AmongUsClient.Instance.GameState == InnerNetClient.GameStates.Started;
+                },
+                __instance
+            );
+        }
     }
 }
-```
-
-If you've done everything correctly, a button should appear when going into a game/freeplay!
-Credits to https://gist.github.com/gabriel-nsiqueira/827dea0a1cdc2210db6f9a045ec4ce0a for the actual code!! I only added some minor stuff.
-*/
+    ```
+    If you've done everything correctly, a button should appear when going into a game/freeplay!
+    Credits to https://gist.github.com/gabriel-nsiqueira/827dea0a1cdc2210db6f9a045ec4ce0a and https://gist.github.com/naturecodevoid/1c61786e6a95d7d093f495b6e67aad29 for the original code.
+    */
 
 using HarmonyLib;
 using Reactor.Extensions;
 using Reactor.Unstrip;
 using System;
 using System.Collections.Generic;
-using System.IO;
-using System.Linq;
-using System.Reflection;
 using UnityEngine;
-using Object = UnityEngine.Object;
 
-namespace Essentials.UI
+namespace Reactor.Button
 {
-    public enum ButtonCategory
+    public delegate bool UseTester();
+    public class CooldownButton
     {
-        Everyone,
-        OnlyCrewmate,
-        OnlyImpostor
-    }
-
-    /// <summary>
-    /// THIS CLASS IS STILL UNDER REFACTORING AND MAY BREAK IN THE FUTURE, BEWARE.
-    /// </summary>
-    public class CooldownButton : IDisposable
-    {
-        public static List<CooldownButton> Buttons = new List<CooldownButton>();
-        public KillButtonManager KillButtonManager;
-        //private Color StartColorButton = new Color(255, 255, 255);
-        private Color StartColorText = new Color(255, 255, 255);
+        public static List<CooldownButton> buttons = new List<CooldownButton>();
+        public KillButtonManager killButtonManager;
+        private Color startColorButton = new Color(255, 255, 255);
+        private Color startColorText = new Color(255, 255, 255);
         public Vector2 PositionOffset = Vector2.zero;
-        public float MaxTimer = 0F;
-        public float Timer = 0F;
-        public float EffectDuration = 0F;
-        public bool IsEffectActive = false, enabled = true;
-        public ButtonCategory Category;
-        //private float PixelsPerUnit;
-        private bool CanUse;
-        private Action OnEffectEnd; // rework to events
-        private bool IsDisposed;
+        public float MaxTimer = 0f;
+        public float Timer = 0f;
+        public float EffectDuration = 0f;
+        public bool isEffectActive;
+        public bool hasEffectDuration;
+        public bool enabled = true;
+        public UseTester useTester;
+        private byte[] image;
+        private Action OnClick;
+        private Action OnEffectEnd;
+        private HudManager hudManager;
+        private bool canUse;
 
-        /// <summary>
-        /// Call in HudManager.Start
-        /// </summary>
-        private CooldownButton(Assembly asm, Action onClick, float cooldown, string embeddedResourcePath/*, float pixelsPerUnit*/, Vector2 positionOffset, ButtonCategory category, bool hasEffectDuration, float effectDuration, Action onEffectEnd)
+        public CooldownButton(Action OnClick, float Cooldown, byte[] image, Vector2 PositionOffset, UseTester useTester, HudManager hudManager, float EffectDuration, Action OnEffectEnd)
         {
-            OnEffectEnd = onEffectEnd;
-            PositionOffset = positionOffset;
-            EffectDuration = effectDuration;
-            Category = category;
-            //PixelsPerUnit = pixelsPerUnit;
-            MaxTimer = cooldown;
+            this.hudManager = hudManager;
+            this.OnClick = OnClick;
+            this.OnEffectEnd = OnEffectEnd;
+            this.PositionOffset = PositionOffset;
+            this.EffectDuration = EffectDuration;
+            this.useTester = useTester;
+            MaxTimer = Cooldown;
             Timer = MaxTimer;
+            this.image = image;
+            hasEffectDuration = true;
+            isEffectActive = false;
+            buttons.Add(this);
+            Start();
+        }
 
-            Buttons.Add(this);
+        public CooldownButton(Action OnClick, float Cooldown, byte[] image, Vector2 PositionOffset, UseTester useTester, HudManager hudManager)
+        {
+            this.hudManager = hudManager;
+            this.OnClick = OnClick;
+            this.PositionOffset = PositionOffset;
+            this.useTester = useTester;
+            MaxTimer = Cooldown;
+            Timer = MaxTimer;
+            this.image = image;
+            hasEffectDuration = false;
+            buttons.Add(this);
+            Start();
+        }
 
-            string embeddedResourceFullPath = asm.GetManifestResourceNames().FirstOrDefault(resourceName => resourceName.EndsWith(embeddedResourcePath, StringComparison.Ordinal));
-
-            if (string.IsNullOrEmpty(embeddedResourceFullPath)) throw new ArgumentNullException(nameof(embeddedResourcePath), $"The embedded resource \"{embeddedResourcePath}\" was not found in assembly \"{asm.GetName().Name}\".");
-
-            Stream resourceStream = asm.GetManifestResourceStream(embeddedResourceFullPath);
-
-            KillButtonManager = Object.Instantiate(HudManager.Instance.KillButton, HudManager.Instance.transform);
-
-            //StartColorButton = killButtonManager.renderer.color;
-            StartColorText = KillButtonManager.TimerText.Color;
-
-            KillButtonManager.gameObject.SetActive(true);
-            KillButtonManager.renderer.enabled = true;
-
+        private void Start()
+        {
+            killButtonManager = UnityEngine.Object.Instantiate(hudManager.KillButton, hudManager.transform);
+            startColorButton = killButtonManager.renderer.color;
+            startColorText = killButtonManager.TimerText.Color;
+            killButtonManager.gameObject.SetActive(true);
+            killButtonManager.renderer.enabled = true;
             Texture2D tex = GUIExtensions.CreateEmptyTexture();
-            byte[] buttonTexture = Reactor.Extensions.Extensions.ReadFully(resourceStream);
-            ImageConversion.LoadImage(tex, buttonTexture, false);
-            KillButtonManager.renderer.sprite = GUIExtensions.CreateSprite(tex);
-
-            PassiveButton button = KillButtonManager.GetComponent<PassiveButton>();
+            ImageConversion.LoadImage(tex, this.image, false);
+            killButtonManager.renderer.sprite = GUIExtensions.CreateSprite(tex);
+            PassiveButton button = killButtonManager.GetComponent<PassiveButton>();
             button.OnClick.RemoveAllListeners();
-            button.OnClick.AddListener(new Action(() =>
+            button.OnClick.AddListener((UnityEngine.Events.UnityAction)listener);
+            void listener()
             {
-                if (Timer < 0f && CanUse)
+                if (Timer < 0f && canUse)
                 {
-                    KillButtonManager.renderer.color = new Color(1f, 1f, 1f, 0.3f);
-
+                    killButtonManager.renderer.color = new Color(1f, 1f, 1f, 0.3f);
                     if (hasEffectDuration)
                     {
-                        IsEffectActive = true;
-
+                        isEffectActive = true;
                         Timer = EffectDuration;
-
-                        KillButtonManager.TimerText.Color = new Color(0, 255, 0);
+                        killButtonManager.TimerText.Color = new Color(0, 255, 0);
                     }
-
-                    onClick();
-                }
-            }));
-        }
-
-        /// <summary>
-        /// Call in HudManager.Start
-        /// </summary>
-        public CooldownButton(Action onClick, float cooldown, string imageEmbededResourcePath, Vector2 positionOffset, ButtonCategory category, float effectDuration, Action onEffectEnd) : this(Assembly.GetCallingAssembly(), onClick, cooldown, imageEmbededResourcePath, positionOffset, category, true, effectDuration, onEffectEnd)
-        {
-        }
-
-        /// <summary>
-        /// Call in HudManager.Start
-        /// </summary>
-        public CooldownButton(Action onClick, float cooldown, string imageEmbededResourcePath, Vector2 positionOffset, ButtonCategory category) : this(Assembly.GetCallingAssembly(), onClick, cooldown, imageEmbededResourcePath, positionOffset, category, false, 0F, null)
-        {
-        }
-
-        public bool IsUsable()
-        {
-            if (PlayerControl.LocalPlayer?.Data == null) return false;
-
-            switch (Category)
-            {
-                case ButtonCategory.Everyone:
-                {
-                    CanUse = true;
-
-                    break;
-                }
-                case ButtonCategory.OnlyCrewmate:
-                {
-                    CanUse = !PlayerControl.LocalPlayer.Data.IsImpostor;
-
-                    break;
-                }
-                case ButtonCategory.OnlyImpostor:
-                {
-                    CanUse = PlayerControl.LocalPlayer.Data.IsImpostor;
-
-                    break;
+                    OnClick();
                 }
             }
-
+        }
+        public bool CanUse()
+        {
+            if (PlayerControl.LocalPlayer.Data == null) return false;
+            canUse = useTester();
             return true;
         }
-
-        [HarmonyPatch(typeof(HudManager), nameof(HudManager.Update))]
-        private static class HudUpdatePatch
+        public static void HudUpdate()
         {
-            public static void Postfix()
+            buttons.RemoveAll(item => item.killButtonManager == null);
+            for (int i = 0; i < buttons.Count; i++)
             {
-                Buttons.RemoveAll(item => item.KillButtonManager == null);
-
-                for (int i = 0; i < Buttons.Count; i++)
+                try
                 {
-                    try
-                    {
-                        if (Buttons[i].IsUsable()) Buttons[i].Update();
-                    }
-                    catch (NullReferenceException)
-                    {
-                        System.Console.WriteLine("[WARNING] NullReferenceException from HudUpdate().CanUse(), if theres only one warning its fine");
-                    }
+                    if (buttons[i].CanUse())
+                        buttons[i].Update();
+                }
+                catch (NullReferenceException)
+                {
+                    System.Console.WriteLine("[WARNING] NullReferenceException from HudUpdate().CanUse(), if theres only one warning its fine");
                 }
             }
         }
-
         private void Update()
         {
-            if (!GameData.Instance || PlayerControl.LocalPlayer.Data == null) return;
-
-            if (KillButtonManager.transform.localPosition.x > 0F)
+            if (killButtonManager.transform.localPosition.x > 0f)
+                killButtonManager.transform.localPosition = new Vector3((killButtonManager.transform.localPosition.x + 1.3f) * -1, killButtonManager.transform.localPosition.y, killButtonManager.transform.localPosition.z) + new Vector3(PositionOffset.x, PositionOffset.y);
+            if (Timer < 0f)
             {
-                Vector3 vector = KillButtonManager.transform.localPosition;
-                vector.x = (vector.x + 1.3F) * -1;
-
-                vector += new Vector3(PositionOffset.x, PositionOffset.y);
-
-                KillButtonManager.transform.localPosition = vector;
-            }
-
-            if (Timer < 0F)
-            {
-                KillButtonManager.renderer.color = new Color(1f, 1f, 1f, 1f);
-
-                if (IsEffectActive)
+                killButtonManager.renderer.color = new Color(1f, 1f, 1f, 1f);
+                if (isEffectActive)
                 {
-                    KillButtonManager.TimerText.Color = StartColorText;
-
+                    killButtonManager.TimerText.Color = startColorText;
                     Timer = MaxTimer;
-
-                    IsEffectActive = false;
-
+                    isEffectActive = false;
                     OnEffectEnd();
                 }
             }
             else
             {
-                if (CanUse) Timer -= Time.deltaTime;
-
-                KillButtonManager.renderer.color = new Color(1f, 1f, 1f, 0.3f);
+                if (canUse)
+                    if (PlayerControl.LocalPlayer.CanMove)
+                        Timer -= Time.deltaTime;
+                killButtonManager.renderer.color = new Color(1f, 1f, 1f, 0.3f);
             }
-
-            KillButtonManager.gameObject.SetActive(CanUse);
-            KillButtonManager.renderer.enabled = CanUse;
-
-            if (CanUse)
+            killButtonManager.gameObject.SetActive(canUse);
+            killButtonManager.renderer.enabled = canUse;
+            if (canUse)
             {
-                KillButtonManager.renderer.material.SetFloat("_Desat", 0f);
-
-                KillButtonManager.SetCoolDown(Timer, MaxTimer);
+                killButtonManager.renderer.material.SetFloat("_Desat", 0f);
+                killButtonManager.SetCoolDown(Timer, MaxTimer);
             }
         }
-
-        public void ApplyCooldown()
+        internal delegate bool d_LoadImage(IntPtr tex, IntPtr data, bool markNonReadable);
+        internal static d_LoadImage iCall_LoadImage;
+        public static bool LoadImage(Texture2D tex, byte[] data, bool markNonReadable)
         {
-            Timer = MaxTimer;
+            if (iCall_LoadImage == null)
+                iCall_LoadImage = UnhollowerBaseLib.IL2CPP.ResolveICall<d_LoadImage>("UnityEngine.ImageConversion::LoadImage");
+
+            var il2cppArray = (UnhollowerBaseLib.Il2CppStructArray<byte>)data;
+
+            return iCall_LoadImage.Invoke(tex.Pointer, il2cppArray.Pointer, markNonReadable);
         }
-
-
-        /*private void UpdateCooldown()
+    }
+    [HarmonyPatch(typeof(HudManager), nameof(HudManager.Update))]
+    public static class ButtonUpdatePatch
+    {
+        public static void Postfix(HudManager __instance)
         {
-            KillButtonManager.SetCoolDown(Timer, MaxTimer);
-        }*/
-
-        protected virtual void Dispose(bool disposing)
+            CooldownButton.HudUpdate();
+        }
+    }
+    [HarmonyPatch(typeof(MeetingHud), nameof(MeetingHud.Start))]
+    public static class ButtonResetPatch
+    {
+        public static void Postfix(MeetingHud __instance)
         {
-            if (!IsDisposed)
+            CooldownButton.buttons.RemoveAll(item => item.killButtonManager == null);
+            for (int i = 0; i < CooldownButton.buttons.Count; i++)
             {
-                if (disposing)
+                try
                 {
-                    try
-                    {
-                        KillButtonManager.renderer.enabled = false;
-                        KillButtonManager.TimerText.enabled = false;
-
-                        Object.Destroy(KillButtonManager);
-                    }
-                    catch
-                    {
-                    }
-                    finally
-                    {
-                        Buttons.Remove(this);
-                    }
+                    if (CooldownButton.buttons[i].CanUse())
+                        CooldownButton.buttons[i].Timer = CooldownButton.buttons[i].MaxTimer;
                 }
-
-                IsDisposed = true;
+                catch (NullReferenceException)
+                {
+                    System.Console.WriteLine("[WARNING] NullReferenceException from ButtonResetPatch().CanUse(), if theres only one warning its fine");
+                }
             }
-        }
-
-        // // TODO: override finalizer only if 'Dispose(bool disposing)' has code to free unmanaged resources
-        // ~CooldownButton()
-        // {
-        //     // Do not change this code. Put cleanup code in 'Dispose(bool disposing)' method
-        //     Dispose(disposing: false);
-        // }
-
-        public void Dispose()
-        {
-            // Do not change this code. Put cleanup code in 'Dispose(bool disposing)' method
-            Dispose(disposing: true);
-            GC.SuppressFinalize(this);
         }
     }
 }
