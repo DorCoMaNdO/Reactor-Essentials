@@ -49,7 +49,7 @@ using System;
 using System.Collections.Generic;
 using UnityEngine;
 
-namespace Reactor.Button
+namespace Essentials.UI
 {
     public delegate bool UseTester();
     public class CooldownButton
