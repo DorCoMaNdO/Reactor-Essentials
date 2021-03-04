@@ -27,8 +27,17 @@ namespace Essentials.Options
             int i = 0;
             foreach (CustomOption option in Options)
             {
+                if (!option.MenuVisible)
+                {
+                    option.GameSetting?.gameObject?.SetActive(false);
+
+                    continue;
+                }
+
                 if (option.GameSetting != null)
                 {
+                    option.GameSetting.gameObject.SetActive(true);
+
                     options.Add(option.GameSetting);
 
                     continue;
@@ -82,7 +91,7 @@ namespace Essentials.Options
 
                     //    options.Add(kv);
 
-                    //    if (Debug) EssentialsPlugin.Logger.LogInfo($"Option \"{option.Name}\" was created");
+                    //    if (Debug)EssentialsPlugin.Logger.LogInfo($"Option \"{option.Name}\" was created");
                     //}
 
                     if (stringOption == null) continue;
@@ -138,10 +147,14 @@ namespace Essentials.Options
             private static void Postfix(ref string __result)
             {
                 StringBuilder builder = new StringBuilder(__result);
-                if (ShamelessPlug) builder.AppendLine("[FF0000FF]DorCoMaNdO on GitHub/Twitter/Twitch[FFFFFFFF]");
-                foreach (CustomOption option in Options) builder.AppendLine($"{option.Name}: {option}");
+                if (ShamelessPlug) builder.AppendLine("[FF1111FF]DorCoMaNdO on GitHub/Twitter/Twitch[]");
+                foreach (CustomOption option in Options) if (option.HudVisible) builder.AppendLine($"{option.Name}: {option}[]");
+
+                //for (int i = 0; i < 50; i++) builder.AppendLine($"{i}");
 
                 __result = builder.ToString();
+
+                if (LobbyTextScroller && __result.Count(c => c == '\n') > 37) __result = __result.Insert(__result.IndexOf('\n'), " (Scroll for more)");
             }
         }
 
@@ -294,9 +307,74 @@ namespace Essentials.Options
         [HarmonyPatch(typeof(HudManager), nameof(HudManager.Update))]
         private class HudManagerUpdate
         {
+            private static Scroller Scroller;
+            private const float MinX = -5.233334F/*-5.3F*/, OriginalY = 2.9F, MinY = 3F; // Differs to cause excess options to appear cut off to encourage scrolling
+            private static Vector3 LastPosition = new Vector3(MinX, MinY);
+
             public static void Prefix(HudManager __instance)
             {
-                __instance.GameSettings.scale = 0.5f; // make configurable/dynamic
+                if (__instance.GameSettings?.transform == null) return;
+
+                __instance.GameSettings.scale = LobbyTextScale;
+
+                // Scroller disabled
+                if (!LobbyTextScroller)
+                {
+                    // Remove scroller if disabled late
+                    if (Scroller != null)
+                    {
+                        __instance.GameSettings.transform.SetParent(Scroller.transform.parent);
+                        __instance.GameSettings.transform.localPosition = new Vector3(MinX, OriginalY);
+                        
+                        Object.Destroy(Scroller);
+                    }
+
+                    return;
+                }
+
+                CreateScroller(__instance);
+
+                Scroller.gameObject.SetActive(__instance.GameSettings.gameObject.activeSelf);
+
+                if (!Scroller.gameObject.active) return;
+
+                int rows = __instance.GameSettings.Text.Count(c => c == '\n');
+                float maxY = rows < 38 ? MinY : rows * LobbyTextRowHeight + (rows - 38) * LobbyTextRowHeight;
+
+                Scroller.YBounds = new FloatRange(MinY, maxY);
+
+                // Prevent scrolling when the player is interacting with a menu
+                if (PlayerControl.LocalPlayer?.CanMove != true)
+                {
+                    __instance.GameSettings.transform.localPosition = LastPosition;
+
+                    return;
+                }
+
+                if (__instance.GameSettings.transform.localPosition.x != MinX || __instance.GameSettings.transform.localPosition.y < MinY) return;
+
+                LastPosition = __instance.GameSettings.transform.localPosition;
+            }
+
+            private static void CreateScroller(HudManager __instance)
+            {
+                if (Scroller != null) return;
+
+                Scroller = new GameObject("SettingsScroller").AddComponent<Scroller>();
+                Scroller.transform.SetParent(__instance.GameSettings.transform.parent);
+                Scroller.gameObject.layer = 5;
+
+                Scroller.transform.localScale = Vector3.one;
+                Scroller.allowX = false;
+                Scroller.allowY = true;
+                Scroller.active = true;
+                Scroller.velocity = new Vector2(0, 0);
+                Scroller.ScrollerYRange = new FloatRange(0, 0);
+                Scroller.XBounds = new FloatRange(MinX, MinX);
+                Scroller.enabled = true;
+
+                Scroller.Inner = __instance.GameSettings.transform;
+                __instance.GameSettings.transform.SetParent(Scroller.transform);
             }
         }
     }

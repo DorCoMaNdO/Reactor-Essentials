@@ -3,6 +3,8 @@ using BepInEx.IL2CPP;
 using BepInEx.Logging;
 using HarmonyLib;
 using Reactor;
+using Reactor.Patches;
+using System.Reflection;
 
 namespace Essentials
 {
@@ -29,6 +31,12 @@ namespace Essentials
 
             RegisterInIl2CppAttribute.Register();
             RegisterCustomRpcAttribute.Register(this);
+
+            ReactorVersionShower.TextUpdated += (text) =>
+            {
+                int index = text.Text.IndexOf('\n');
+                text.Text = text.Text.Insert(index == -1 ? text.Text.Length - 1 : index, "\nEssentials " + typeof(EssentialsPlugin).Assembly.GetCustomAttribute<AssemblyInformationalVersionAttribute>().InformationalVersion);
+            };
         }
     }
 }

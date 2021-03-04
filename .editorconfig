@@ -1,10 +1,4 @@
 ﻿[*.cs]
 
-# IDE0001: Simplify Names
-dotnet_diagnostic.IDE0001.severity = suggestion
-
 # CA1031: Do not catch general exception types
 dotnet_diagnostic.CA1031.severity = silent
-
-# CA1819: Properties should not return arrays
-dotnet_diagnostic.CA1819.severity = silent
