@@ -2,6 +2,7 @@
 using Reactor.Extensions;
 using System.Collections.Generic;
 using System.Linq;
+using System.Reflection;
 using System.Text;
 using UnhollowerBaseLib;
 using UnityEngine;
@@ -137,24 +138,32 @@ namespace Essentials.Options
         {
             public static void Postfix(GameOptionsMenu __instance)
             {
-                __instance.GetComponentInParent<Scroller>().YBounds.max = -0.5F + __instance.Children.Length * 0.4F;
+                //__instance.GetComponentInParent<Scroller>().YBounds.max = -0.5F + __instance.Children.Length * 0.4F;
+                __instance.GetComponentInParent<Scroller>().YBounds.max = (__instance.Children.Length - 7) * 0.5F + 0.13F;
             }
         }
 
-        [HarmonyPatch(typeof(GameOptionsData), nameof(GameOptionsData.Method_24))] //ToHudString
+        //[HarmonyPatch(typeof(GameOptionsData), nameof(GameOptionsData.Method_24))] //ToHudString
+        [HarmonyPatch]
         private static class GameOptionsDataPatch
         {
-            private static void Postfix(ref string __result)
+            public static IEnumerable<MethodBase> TargetMethods()
             {
-                StringBuilder builder = new StringBuilder(__result);
-                if (ShamelessPlug) builder.AppendLine("[FF1111FF]DorCoMaNdO on GitHub/Twitter/Twitch[]");
-                foreach (CustomOption option in Options) if (option.HudVisible) builder.AppendLine($"{option.Name}: {option}[]");
+                return typeof(GameOptionsData).GetMethods(typeof(string), typeof(int));
+            }
 
-                //for (int i = 0; i < 50; i++) builder.AppendLine($"{i}");
+            public static void Postfix(ref string __result)
+            {
+                int firstNewline = __result.IndexOf('\n');
+                StringBuilder sb = new StringBuilder(ClearDefaultLobbyText ? __result.Substring(0, firstNewline + 1) : __result);
+                if (ShamelessPlug) sb.AppendLine("[FF1111FF]DorCoMaNdO on GitHub/Twitter/Twitch[]");
+                foreach (CustomOption option in Options) if (option.HudVisible) sb.AppendLine($"{option.Name}: {option}[]");
 
-                __result = builder.ToString();
+                __result = sb.ToString();
 
-                if (LobbyTextScroller && __result.Count(c => c == '\n') > 37) __result = __result.Insert(__result.IndexOf('\n'), " (Scroll for more)");
+                string insert = ":";
+                if (LobbyTextScroller && __result.Count(c => c == '\n') > 37) insert = " (Scroll for more):";
+                __result = __result.Insert(firstNewline, insert);
             }
         }
 
@@ -298,9 +307,10 @@ namespace Essentials.Options
         {
             public static void Postfix()
             {
-                if (PlayerControl.AllPlayerControls.Count < 2 || !AmongUsClient.Instance || !PlayerControl.LocalPlayer || !AmongUsClient.Instance.AmHost) return;
+                if (AmongUsClient.Instance?.AmHost != true || PlayerControl.AllPlayerControls.Count < 2 || !PlayerControl.LocalPlayer) return;
 
-                Rpc.Instance.Send(new Rpc.Data(Options));
+                Rpc.Send(Options.Select(o => ((string, CustomOptionType, object))o).ToArray());
+                //foreach (CustomOption option in Options) Rpc.Send(option);
             }
         }
 
@@ -325,7 +335,7 @@ namespace Essentials.Options
                     {
                         __instance.GameSettings.transform.SetParent(Scroller.transform.parent);
                         __instance.GameSettings.transform.localPosition = new Vector3(MinX, OriginalY);
-                        
+
                         Object.Destroy(Scroller);
                     }
 

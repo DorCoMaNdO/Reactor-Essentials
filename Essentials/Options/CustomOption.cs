@@ -44,7 +44,7 @@ namespace Essentials.Options
         /// <summary>
         /// Enables debug logging messages.
         /// </summary>
-        public static bool Debug { get; set; } = true;
+        public static bool Debug { get; set; } = false;
 
         /// <summary>
         /// The size of lobby options text, game default is 0.65F, Essentials default is 0.5F.
@@ -61,6 +61,11 @@ namespace Essentials.Options
         /// this should be adjusted for the scroller to work correctly.
         /// </summary>
         public static float LobbyTextRowHeight { get; set; } = 0.081F;
+
+        /// <summary>
+        /// Clear the game's default settings list before listing custom settings in the lobby.
+        /// </summary>
+        public static bool ClearDefaultLobbyText { get; set; } = false;
 
         /// <summary>
         /// The ID of the plugin that created the option.
@@ -390,7 +395,7 @@ namespace Essentials.Options
                 
                 if (option.GameSetting is KeyValueOption kv)
                 {
-                    if (report && AmongUsClient.Instance && PlayerControl.LocalPlayer && AmongUsClient.Instance.AmHost)
+                    if (report && AmongUsClient.Instance?.AmHost == true && PlayerControl.LocalPlayer)
                     {
                         Rpc.Instance.Send(new Rpc.Data(option));
 
@@ -449,7 +454,7 @@ namespace Essentials.Options
         {
             if (value?.GetType() != Value?.GetType() || Value == value) return; // Refuse value updates that don't match the option type
 
-            if (raiseEvents && OnValueChanged != null && AmongUsClient.Instance && PlayerControl.LocalPlayer && AmongUsClient.Instance.AmHost)
+            if (raiseEvents && OnValueChanged != null && AmongUsClient.Instance?.AmHost == true && PlayerControl.LocalPlayer)
             {
                 object lastValue = value;
 
@@ -478,7 +483,7 @@ namespace Essentials.Options
 
             Value = value;
 
-            if (GameSetting != null && AmongUsClient.Instance && PlayerControl.LocalPlayer && AmongUsClient.Instance.AmHost) Rpc.Instance.Send(new Rpc.Data(this));
+            if (GameSetting != null && AmongUsClient.Instance?.AmHost == true && PlayerControl.LocalPlayer) Rpc.Send(new (string, CustomOptionType, object)[] { this });//Rpc.Send(this);
 
             try
             {
@@ -493,7 +498,7 @@ namespace Essentials.Options
                 {
                     float newValue = (float)Value;
 
-                    number.Value = number.oldValue = newValue;
+                    number.Value = number./*oldValue*/Field_3 = newValue;
                     number.ValueText.Text = ToString();
                 }
                 else if (GameSetting is StringOption str)
@@ -516,15 +521,21 @@ namespace Essentials.Options
                 EssentialsPlugin.Logger.LogWarning($"Failed to update game setting value for option \"{Name}\": {e}");
             }
 
-            if (raiseEvents) ValueChanged?.SafeInvoke(this, ValueChangedEventArgs(value, Value));
-            /*{
-                OptionValueChangedEventArgs args = ValueChangedEventArgs(value, Value);
-                foreach (EventHandler<OptionValueChangedEventArgs> handler in ValueChanged.GetInvocationList()) handler(this, args);
-            }*/
+            if (raiseEvents) ValueChanged?.SafeInvoke(this, ValueChangedEventArgs(value, Value), nameof(ValueChanged));
 
             try
             {
-                if (GameSetting != null) Object.FindObjectOfType<GameOptionsMenu>()?.Method_16(); // RefreshChildren();
+                if (GameSetting != null)
+                {
+                    //Object.FindObjectOfType<GameOptionsMenu>()?.Method_16(); // RefreshChildren();
+                    GameOptionsMenu optionsMenu = Object.FindObjectOfType<GameOptionsMenu>();
+                    for (int i = 0; i < optionsMenu.Children.Length; i++)
+                    {
+                        OptionBehaviour optionBehaviour = optionsMenu.Children[i];
+                        optionBehaviour.enabled = false;
+                        optionBehaviour.enabled = true;
+                    }
+                }
             }
             catch
             {
@@ -586,7 +597,7 @@ namespace Essentials.Options
         {
             ValueChanged += (sender, args) =>
             {
-                if (GameSetting is ToggleOption && AmongUsClient.Instance && PlayerControl.LocalPlayer && AmongUsClient.Instance.AmHost && ConfigEntry != null) ConfigEntry.Value = (bool)Value;
+                if (GameSetting is ToggleOption && AmongUsClient.Instance?.AmHost == true && PlayerControl.LocalPlayer && ConfigEntry != null) ConfigEntry.Value = (bool)Value;
             };
 
             ConfigEntry = saveValue ? EssentialsPlugin.Instance.Config.Bind(PluginID, ConfigID, (bool)DefaultValue) : null;
@@ -708,7 +719,7 @@ namespace Essentials.Options
 
             ValueChanged += (sender, args) =>
             {
-                if (GameSetting is NumberOption && AmongUsClient.Instance && PlayerControl.LocalPlayer && AmongUsClient.Instance.AmHost && ConfigEntry != null) ConfigEntry.Value = (float)Value;
+                if (GameSetting is NumberOption && AmongUsClient.Instance?.AmHost == true && PlayerControl.LocalPlayer && ConfigEntry != null) ConfigEntry.Value = (float)Value;
             };
 
             ConfigEntry = saveValue ? EssentialsPlugin.Instance.Config.Bind(PluginID, ConfigID, (float)DefaultValue) : null;
@@ -734,7 +745,7 @@ namespace Essentials.Options
             number.TitleText.Text = Name;
             number.ValidRange = new FloatRange(Min, Max);
             number.Increment = Increment;
-            number.Value = number.oldValue = GetValue();
+            number.Value = number./*oldValue*/Field_3 = GetValue();
             number.ValueText.Text = ToString();
         }
 
@@ -817,7 +828,7 @@ namespace Essentials.Options
 
             ValueChanged += (sender, args) =>
             {
-                if (GameSetting is StringOption && AmongUsClient.Instance && PlayerControl.LocalPlayer && AmongUsClient.Instance.AmHost && ConfigEntry != null) ConfigEntry.Value = (int)Value;
+                if (GameSetting is StringOption && AmongUsClient.Instance?.AmHost == true && PlayerControl.LocalPlayer && ConfigEntry != null) ConfigEntry.Value = (int)Value;
             };
 
             ConfigEntry = saveValue ? EssentialsPlugin.Instance.Config.Bind(PluginID, ConfigID, (int)DefaultValue) : null;
