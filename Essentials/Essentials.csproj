@@ -2,7 +2,7 @@
   <PropertyGroup>
     <TargetFramework>netstandard2.1</TargetFramework>
     <LangVersion>latest</LangVersion>
-    <Version>0.2.0</Version>
+    <Version>0.2.0-dev.2</Version>
     <Mappings>NuclearPowered/Mappings:0.2.0</Mappings>
 
     <Description>Among Us modding essentials</Description>
