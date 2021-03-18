@@ -2,33 +2,40 @@
   <PropertyGroup>
     <TargetFramework>netstandard2.1</TargetFramework>
     <LangVersion>latest</LangVersion>
-    <Version>0.2.0-dev.2</Version>
-    <Mappings>NuclearPowered/Mappings:0.2.0</Mappings>
+    <Version>0.2.0-dev.3</Version>
 
     <Description>Among Us modding essentials</Description>
     <Authors>CoMaNdO</Authors>
+    <Configurations>S20201209;S20210305</Configurations>
   </PropertyGroup>
 
-  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
+  <PropertyGroup Condition="'$(Configuration)'=='S20201209'">
     <Optimize>false</Optimize>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
     <NoWarn>1701;1702;</NoWarn>
+
+    <AmongUs>$(AmongUs_2020-12-9)</AmongUs>
+    <Mappings>NuclearPowered/Mappings:0.1.3</Mappings>
+    <GameVersion>2020.12.9s</GameVersion>
   </PropertyGroup>
 
-  <PropertyGroup Condition="'$(GamePlatform)' == ''">
-    <GamePlatform>Steam</GamePlatform>
-  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)'=='S20210305'">
+    <Optimize>false</Optimize>
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+    <NoWarn>1701;1702;</NoWarn>
 
-  <PropertyGroup Condition="'$(GamePlatform)' == 'Steam'">
+    <Mappings>NuclearPowered/Mappings:0.2.0</Mappings>
     <GameVersion>2021.3.5s</GameVersion>
+  </PropertyGroup>
+  
+  <PropertyGroup Condition="$(Configuration.StartsWith('s'))">
     <DefineConstants>$(DefineConstants);STEAM</DefineConstants>
   </PropertyGroup>
 
-  <PropertyGroup Condition="'$(GamePlatform)' == 'Itch'">
-    <GameVersion>2020.11.17i</GameVersion>
+  <PropertyGroup Condition="$(Configuration.StartsWith('i'))">
     <DefineConstants>$(DefineConstants);ITCH</DefineConstants>
   </PropertyGroup>
-
+      
   <ItemGroup>
     <Deobfuscate Include="$(AmongUs)\BepInEx\plugins\Reactor-$(GameVersion).dll" />
 
@@ -36,6 +43,7 @@
   </ItemGroup>
 
   <Target Name="Copy" AfterTargets="Reobfuscate">
-    <Copy SourceFiles="$(OutputPath)reobfuscated/$(AssemblyName)-$(GameVersion).dll" DestinationFolder="$(AmongUs)/BepInEx/plugins/" Condition="'$(Configuration)' == 'Debug'" />
+    <Copy SourceFiles="$(OutputPath)reobfuscated/$(AssemblyName)-$(GameVersion).dll" DestinationFolder="$(AmongUs)/BepInEx/plugins/" />
+    <Copy SourceFiles="$(OutputPath)reobfuscated/$(AssemblyName)-$(GameVersion).dll" DestinationFolder="$(OutputPath)/../../../../bin/" />
   </Target>
 </Project>

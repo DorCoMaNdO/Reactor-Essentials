@@ -1,7 +1,6 @@
 ﻿using BepInEx;
 using BepInEx.IL2CPP;
 using BepInEx.Logging;
-using Essentials.Options;
 using HarmonyLib;
 using Reactor;
 using Reactor.Patches;

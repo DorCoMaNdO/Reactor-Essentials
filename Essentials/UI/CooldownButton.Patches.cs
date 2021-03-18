@@ -49,9 +49,12 @@ namespace Essentials.UI
             foreach (CooldownButton button in Buttons) button.EndEffect(false); // End button effect early, TODO: Add property to pause effect duration instead.
         }
 
-        //[HarmonyPatch(typeof(ExileController), nameof(ExileController.Method_37))] //WrapUp 2020.12.9s
         //[HarmonyPatch(typeof(ExileController.Animate__d), nameof(ExileController.Animate__d.MoveNext))]
+#if S20201209
+        [HarmonyPatch(typeof(ExileController), nameof(ExileController.Method_37))] //WrapUp 2020.12.9s
+#elif S20210305
         [HarmonyPatch(typeof(ExileController), nameof(ExileController.Method_24))] //WrapUp 2021.3.5s
+#endif
         [HarmonyPostfix]
         private static void ExileControllerWrapUp()
         {

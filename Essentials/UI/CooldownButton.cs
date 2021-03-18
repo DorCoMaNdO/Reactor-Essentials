@@ -1,5 +1,8 @@
 using Essentials.Extensions;
 using Reactor.Extensions;
+#if S20201209
+using Reactor.Unstrip;
+#endif
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
@@ -25,7 +28,9 @@ namespace Essentials.UI
 
         private KillButtonManager KillButtonManager;
 
-        public Vector2 PositionOffset { get; private set; }
+        private Vector2 _positionOffset;
+        public Vector2 PositionOffset { get { return _positionOffset; } private set { _positionOffset = value; PositionOffsetV3 = new Vector3(value.x, value.y); } }
+        private Vector3 PositionOffsetV3;
 
         private float _initialCooldownDuration = 0F;
         /// <summary>
@@ -109,7 +114,6 @@ namespace Essentials.UI
         /// </summary>
         public event EventHandler<EventArgs> OnCooldownEnd;
 
-        private byte[] ImageData;
         private Sprite ButtonSprite;
 
         private bool IsDisposed;
@@ -117,7 +121,7 @@ namespace Essentials.UI
         /// <summary>
         /// Call in Plugin.Load
         /// </summary>
-        public CooldownButton(byte[] imageData, Vector2 positionOffset, float cooldown = 0F, float effectDuration = 0F, float initialCooldown = 0F)
+        public CooldownButton(Sprite buttonSprite, Vector2 positionOffset, float cooldown = 0F, float effectDuration = 0F, float initialCooldown = 0F)
         {
             PositionOffset = positionOffset;
             CooldownDuration = cooldown;
@@ -128,9 +132,18 @@ namespace Essentials.UI
 
             Buttons.Add(this);
 
-            ImageData = imageData ?? throw new ArgumentNullException(nameof(imageData), $"An image asset is required.");
+            ButtonSprite = buttonSprite ?? throw new ArgumentNullException(nameof(buttonSprite), $"An image sprite is required.");
 
             CreateButton();
+        }
+
+        /// <summary>
+        /// Call in Plugin.Load
+        /// </summary>
+        public CooldownButton(byte[] imageData, Vector2 positionOffset, float cooldown = 0F, float effectDuration = 0F, float initialCooldown = 0F) :
+            this(CreateSprite(imageData ?? throw new ArgumentNullException(nameof(imageData), $"An image asset is required.")),
+                positionOffset, cooldown, effectDuration, initialCooldown)
+        {
         }
 
         /// <summary>
@@ -161,22 +174,29 @@ namespace Essentials.UI
             return asm.GetManifestResourceStream(embeddedResourceFullPath).ReadFully();
         }
 
+        private static Sprite CreateSprite(byte[] imageData)
+        {
+            Texture2D tex = GUIExtensions.CreateEmptyTexture().DontDestroy();
+            ImageConversion.LoadImage(tex, imageData, false);
+
+            Sprite sprite = tex.CreateSprite().DontDestroy();
+
+            return sprite;
+        }
+
         /// <summary>
         /// Creates an instance of <see cref="KillButtonManager"/> when one does not exist.
         /// </summary>
         private void CreateButton()
         {
-            if (KillButtonManager != null || !HudManager.Instance?.KillButton || ImageData == null) return;
+            if (KillButtonManager != null || !HudManager.Instance?.KillButton || ButtonSprite == null) return;
 
             KillButtonManager = Object.Instantiate(HudManager.Instance.KillButton, HudManager.Instance.transform);
 
             KillButtonManager.gameObject.SetActive(HudVisible && Visible);
             KillButtonManager.renderer.enabled = HudVisible && Visible;
 
-            Texture2D tex = GUIExtensions.CreateEmptyTexture();
-            ImageConversion.LoadImage(tex, ImageData, false);
-
-            KillButtonManager.renderer.sprite = ButtonSprite = tex.CreateSprite();
+            KillButtonManager.renderer.sprite = ButtonSprite;
 
             PassiveButton button = KillButtonManager.GetComponent<PassiveButton>();
             button.OnClick.RemoveAllListeners();
@@ -251,9 +271,9 @@ namespace Essentials.UI
             if (KillButtonManager.transform.localPosition.x > 0F)
             {
                 Vector3 vector = KillButtonManager.transform.localPosition;
-                vector.x = (vector.x + 1.3F) * -1;
+                vector.x = -(vector.x + 1.3F);
 
-                vector += new Vector3(PositionOffset.x, PositionOffset.y);
+                vector += PositionOffsetV3;
 
                 KillButtonManager.transform.localPosition = vector;
             }
@@ -341,12 +361,16 @@ namespace Essentials.UI
                 {
                     try
                     {
-                        ImageData = null;
+                        if (KillButtonManager)
+                        {
+                            KillButtonManager.renderer.enabled = false;
+                            KillButtonManager.TimerText.enabled = false;
 
-                        KillButtonManager.renderer.enabled = false;
-                        KillButtonManager.TimerText.enabled = false;
+                            KillButtonManager.Destroy();
+                        }
 
-                        Object.Destroy(KillButtonManager);
+                        ButtonSprite?.texture?.Destroy();
+                        ButtonSprite?.Destroy();
                     }
                     catch
                     {

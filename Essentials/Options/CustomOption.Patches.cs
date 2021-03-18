@@ -4,7 +4,6 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
 using System.Text;
-using UnhollowerBaseLib;
 using UnityEngine;
 using Object = UnityEngine.Object;
 
@@ -12,6 +11,8 @@ namespace Essentials.Options
 {
     public partial class CustomOption
     {
+        private static int defaultGameOptionsCount = 0;
+
         private static List<OptionBehaviour> GetGameOptions(float lowestY)
         {
             List<OptionBehaviour> options = new List<OptionBehaviour>();
@@ -28,16 +29,9 @@ namespace Essentials.Options
             int i = 0;
             foreach (CustomOption option in Options)
             {
-                if (!option.MenuVisible)
-                {
-                    option.GameSetting?.gameObject?.SetActive(false);
-
-                    continue;
-                }
-
                 if (option.GameSetting != null)
                 {
-                    option.GameSetting.gameObject.SetActive(true);
+                    option.GameSetting?.gameObject?.SetActive(option.MenuVisible);
 
                     options.Add(option.GameSetting);
 
@@ -50,8 +44,6 @@ namespace Essentials.Options
 
                     ToggleOption toggle = Object.Instantiate(toggleOption, toggleOption.transform.parent).DontDestroy();
 
-                    toggle.transform.localPosition = new Vector3(toggle.transform.localPosition.x, lowestY - ++i * 0.5F, toggle.transform.localPosition.z);
-
                     option.OnGameOptionCreated(toggle);
 
                     options.Add(toggle);
@@ -63,8 +55,6 @@ namespace Essentials.Options
                     if (numberOption == null) continue;
 
                     NumberOption number = Object.Instantiate(numberOption, numberOption.transform.parent).DontDestroy();
-
-                    number.transform.localPosition = new Vector3(number.transform.localPosition.x, lowestY - ++i * 0.5F, number.transform.localPosition.z);
 
                     option.OnGameOptionCreated(number);
 
@@ -99,14 +89,18 @@ namespace Essentials.Options
 
                     StringOption str = Object.Instantiate(stringOption, stringOption.transform.parent).DontDestroy();
 
-                    str.transform.localPosition = new Vector3(str.transform.localPosition.x, lowestY - ++i * 0.5F, str.transform.localPosition.z);
-
                     option.OnGameOptionCreated(str);
 
                     options.Add(str);
 
                     if (Debug) EssentialsPlugin.Logger.LogInfo($"Option \"{option.Name}\" was created");
                 }
+
+                if (!option.GameSetting) continue;
+
+                if (option.MenuVisible) option.GameSetting.transform.localPosition = new Vector3(option.GameSetting.transform.localPosition.x, lowestY - ++i * 0.5F, option.GameSetting.transform.localPosition.z);
+
+                option.GameSetting.gameObject.SetActive(option.MenuVisible);
             }
 
             return options;
@@ -118,13 +112,15 @@ namespace Essentials.Options
             public static void Postfix(GameOptionsMenu __instance)
             {
                 List<OptionBehaviour> customOptions = GetGameOptions(__instance.GetComponentsInChildren<OptionBehaviour>().Min(option => option.transform.localPosition.y));
-                Il2CppReferenceArray<OptionBehaviour> defaultOptions = __instance.Children;
+                OptionBehaviour[] defaultOptions = __instance.Children;
+
+                defaultGameOptionsCount = defaultOptions.Length;
 
                 OptionBehaviour[] options = defaultOptions.Concat(customOptions).ToArray();
 
                 //EssentialsPlugin.Logger.LogInfo($"__instance.Children.Count {__instance.Children.Count}");
 
-                __instance.Children = new Il2CppReferenceArray<OptionBehaviour>(options);
+                __instance.Children = options;
 
                 //__instance.GetComponentInParent<Scroller>().YBounds.max = options.Length * /*0.3455F*/0.4F;
                 //__instance.GetComponentInParent<Scroller>().YBounds.max = -0.5F + options.Length * 0.4F;
@@ -138,6 +134,30 @@ namespace Essentials.Options
         {
             public static void Postfix(GameOptionsMenu __instance)
             {
+                if (Options.Count > 0)
+                {
+                    List<OptionBehaviour> options = __instance.Children.Take(defaultGameOptionsCount).ToList();
+
+                    float lowestY = options.Min(option => option.transform.localPosition.y);
+                    int i = 0;
+
+                    foreach (CustomOption option in Options)
+                    {
+                        if (!option.GameSetting?.gameObject) continue;
+
+                        option.GameSetting.gameObject.SetActive(option.MenuVisible);
+
+                        if (option.MenuVisible)
+                        {
+                            option.GameSetting.transform.localPosition = new Vector3(option.GameSetting.transform.localPosition.x, lowestY - ++i * 0.5F, option.GameSetting.transform.localPosition.z);
+
+                            options.Add(option.GameSetting);
+                        }
+                    }
+
+                    __instance.Children = options.ToArray();
+                }
+
                 //__instance.GetComponentInParent<Scroller>().YBounds.max = -0.5F + __instance.Children.Length * 0.4F;
                 __instance.GetComponentInParent<Scroller>().YBounds.max = (__instance.Children.Length - 7) * 0.5F + 0.13F;
             }
@@ -157,7 +177,7 @@ namespace Essentials.Options
                 int firstNewline = __result.IndexOf('\n');
                 StringBuilder sb = new StringBuilder(ClearDefaultLobbyText ? __result.Substring(0, firstNewline + 1) : __result);
                 if (ShamelessPlug) sb.AppendLine("[FF1111FF]DorCoMaNdO on GitHub/Twitter/Twitch[]");
-                foreach (CustomOption option in Options) if (option.HudVisible) sb.AppendLine($"{option.Name}: {option}[]");
+                foreach (CustomOption option in Options) if (option.HudVisible) sb.AppendLine(option.ToString());
 
                 __result = sb.ToString();
 
@@ -349,7 +369,7 @@ namespace Essentials.Options
                 if (!Scroller.gameObject.active) return;
 
                 int rows = __instance.GameSettings.Text.Count(c => c == '\n');
-                float maxY = rows < 38 ? MinY : rows * LobbyTextRowHeight + (rows - 38) * LobbyTextRowHeight;
+                float maxY = Mathf.Max(MinY, rows * LobbyTextRowHeight + (rows - 38) * LobbyTextRowHeight);
 
                 Scroller.YBounds = new FloatRange(MinY, maxY);
 

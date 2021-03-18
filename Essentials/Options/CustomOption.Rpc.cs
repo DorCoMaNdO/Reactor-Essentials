@@ -21,7 +21,7 @@ namespace Essentials.Options
             if (Debug) EssentialsPlugin.Logger.LogInfo($"{sender.Data.PlayerName} sent option(s):");
             foreach ((string ID, CustomOptionType Type, object Value) option in options)
             {
-                CustomOption customOption = Options.FirstOrDefault(o => o.ID.Equals(option.ID, StringComparison.Ordinal));
+                CustomOption customOption = Options.FirstOrDefault(o => o.ID.Equals(option.ID, StringComparison.Ordinal) && o.Type == option.Type);
 
                 if (Debug) EssentialsPlugin.Logger.LogInfo($"\"{option.ID}\" type: {option.Type}, value: {option.Value}, match: {customOption != null}, current value: {(customOption != null ? customOption.Value : "Unknown")}");
 

@@ -130,7 +130,13 @@ namespace Essentials.Options
         public OptionBehaviour GameSetting { get; private protected set; }
 
         /// <summary>
-        /// The string format reflecting the value, applied to <see cref="ToString()"/>.
+        /// The string format reflecting the option name, result returned by <see cref="GetFormattedName"/>.
+        /// Does not apply to the lobby options menu.
+        /// </summary>
+        public Func<CustomOption, string, string> NameStringFormat { get; set; }
+
+        /// <summary>
+        /// The string format reflecting the value, result returned by <see cref="GetFormattedValue"/>.
         /// </summary>
         public Func<CustomOption, object, string> StringFormat { get; set; }
 
@@ -233,9 +239,19 @@ namespace Essentials.Options
         /// <summary>
         /// Raises <see cref="ValueChanged"/> event when <see cref="Value"/> differs from <see cref="DefaultValue"/>.
         /// </summary>
+        [Obsolete("Use RaiseValueChanged", true)]
         public void RaiseIfNonDefault()
         {
-            if (Value != DefaultValue) ValueChanged?.Invoke(this, ValueChangedEventArgs(Value, DefaultValue));
+            RaiseValueChanged();
+        }
+
+        /// <summary>
+        /// Raises <see cref="ValueChanged"/> event.
+        /// </summary>
+        /// <param name="nonDefault">Only raise the event when the current value isn't default</param>
+        public void RaiseValueChanged(bool nonDefault = true)
+        {
+            if (!nonDefault || Value != DefaultValue) ValueChanged?.Invoke(this, ValueChangedEventArgs(Value, DefaultValue));
         }
 
         /// <summary>
@@ -404,7 +420,7 @@ namespace Essentials.Options
 
                     //kv.oldValue = oldValue;
                     kv.Selected = kv.oldValue = newValue;
-                    kv.ValueText.Text = option.ToString();
+                    kv.ValueText.Text = option.GetFormattedValue();
                 }
                 
                 try
@@ -498,22 +514,26 @@ namespace Essentials.Options
                 {
                     float newValue = (float)Value;
 
-                    number.Value = number./*oldValue*/Field_3 = newValue;
-                    number.ValueText.Text = ToString();
+#if S20201209
+                    number.Value = number.oldValue = newValue;
+#elif S20210305
+                    number.Value = number.Field_3 = newValue;
+#endif
+                    number.ValueText.Text = GetFormattedValue();
                 }
                 else if (GameSetting is StringOption str)
                 {
                     int newValue = (int)Value;
 
                     str.Value = str.oldValue = newValue;
-                    str.ValueText.Text = ToString();
+                    str.ValueText.Text = GetFormattedValue();
                 }
                 else if (GameSetting is KeyValueOption kv)
                 {
                     int newValue = (int)Value;
 
                     kv.Selected = kv.oldValue = newValue;
-                    kv.ValueText.Text = ToString();
+                    kv.ValueText.Text = GetFormattedValue();
                 }
             }
             catch (Exception e)
@@ -564,12 +584,22 @@ namespace Essentials.Options
             return (T)Value;
         }
 
+        /// <returns><see cref="Name"/> passed through <see cref="NameStringFormat"/>.</returns>
+        public string GetFormattedName()
+        {
+            return NameStringFormat?.Invoke(this, Name) ?? Name.ToString();
+        }
+
+        /// <returns><see cref="Value"/> passed through <see cref="StringFormat"/>.</returns>
+        public string GetFormattedValue()
+        {
+            return StringFormat?.Invoke(this, Value) ?? Value.ToString();
+        }
+
         /// <returns><see cref="object.ToString()"/> or the return value of <see cref="StringFormat"/> when provided.</returns>
         public override string ToString()
         {
-            if (StringFormat != null) return StringFormat(this, Value);
-
-            return Value.ToString();
+            return $"{GetFormattedName()}: {GetFormattedValue()}[]";
         }
     }
 
@@ -745,8 +775,12 @@ namespace Essentials.Options
             number.TitleText.Text = Name;
             number.ValidRange = new FloatRange(Min, Max);
             number.Increment = Increment;
-            number.Value = number./*oldValue*/Field_3 = GetValue();
-            number.ValueText.Text = ToString();
+#if S20201209
+            number.Value = number.oldValue = GetValue();
+#elif S20210305
+            number.Value = number.Field_3 = GetValue();
+#endif
+            number.ValueText.Text = GetFormattedValue();
         }
 
         /// <summary>
@@ -853,7 +887,7 @@ namespace Essentials.Options
 
             str.TitleText.Text = Name;
             str.Value = str.oldValue = GetValue();
-            str.ValueText.Text = ToString();
+            str.ValueText.Text = GetFormattedValue();
         }
 
         /// <summary>
@@ -949,7 +983,7 @@ namespace Essentials.Options
     //        /*kv.Values = new List<Il2CppSystem.Collections.Generic.KeyValuePair<string, int>>();
     //        for (int i = 0; i < Values.Length; i++) kv.Values.Add(new Il2CppSystem.Collections.Generic.KeyValuePair<string, int>(Values[i], i));*/
     //        kv.Selected = kv.oldValue = GetValue();
-    //        kv.ValueText.Text = ToString();
+    //        kv.ValueText.Text = GetFormattedValue();
 
     //        GameSetting = kv;
     //    }
