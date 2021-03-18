@@ -31,7 +31,7 @@ namespace Essentials.Options
             {
                 if (option.GameSetting != null)
                 {
-                    option.GameSetting?.gameObject?.SetActive(option.MenuVisible);
+                    option.GameSetting.gameObject.SetActive(option.MenuVisible);
 
                     options.Add(option.GameSetting);
 

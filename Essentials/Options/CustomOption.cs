@@ -459,7 +459,7 @@ namespace Essentials.Options
         }
 
         /// <summary>
-        /// Sets the option's value, it's not recommended to call this directly, call derivatives instead.
+        /// Sets the option's value.
         /// </summary>
         /// <remarks>
         /// Does nothing when the value type differs or when the value matches the current value.

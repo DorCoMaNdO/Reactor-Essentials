@@ -29,7 +29,7 @@ namespace Essentials.UI
         private KillButtonManager KillButtonManager;
 
         private Vector2 _positionOffset;
-        public Vector2 PositionOffset { get { return _positionOffset; } private set { _positionOffset = value; PositionOffsetV3 = new Vector3(value.x, value.y); } }
+        public Vector2 PositionOffset { get { return _positionOffset; } set { _positionOffset = value; PositionOffsetV3 = _positionOffset.ToVector3(); } }
         private Vector3 PositionOffsetV3;
 
         private float _initialCooldownDuration = 0F;
@@ -114,6 +114,8 @@ namespace Essentials.UI
         /// </summary>
         public event EventHandler<EventArgs> OnCooldownEnd;
 
+        private Vector3? BasePosition;
+
         private Sprite ButtonSprite;
 
         private bool IsDisposed;
@@ -121,7 +123,7 @@ namespace Essentials.UI
         /// <summary>
         /// Call in Plugin.Load
         /// </summary>
-        public CooldownButton(Sprite buttonSprite, Vector2 positionOffset, float cooldown = 0F, float effectDuration = 0F, float initialCooldown = 0F)
+        public CooldownButton(Sprite sprite, Vector2 positionOffset, float cooldown = 0F, float effectDuration = 0F, float initialCooldown = 0F)
         {
             PositionOffset = positionOffset;
             CooldownDuration = cooldown;
@@ -132,7 +134,7 @@ namespace Essentials.UI
 
             Buttons.Add(this);
 
-            ButtonSprite = buttonSprite ?? throw new ArgumentNullException(nameof(buttonSprite), $"An image sprite is required.");
+            if (sprite) UpdateSprite(sprite);
 
             CreateButton();
         }
@@ -176,12 +178,36 @@ namespace Essentials.UI
 
         private static Sprite CreateSprite(byte[] imageData)
         {
-            Texture2D tex = GUIExtensions.CreateEmptyTexture().DontDestroy();
+            Texture2D tex = GUIExtensions.CreateEmptyTexture();//.DontDestroy();
             ImageConversion.LoadImage(tex, imageData, false);
 
-            Sprite sprite = tex.CreateSprite().DontDestroy();
+            Sprite sprite = tex.CreateSprite();//.DontDestroy();
 
             return sprite;
+        }
+
+        /// <summary>
+        /// Updates the button's sprite.
+        /// </summary>
+        /// <remarks>
+        /// The sprite is instantiated.
+        /// </remarks>
+        /// <param name="sprite">New sprite</param>
+        public void UpdateSprite(Sprite sprite)
+        {
+            if (sprite == null) throw new ArgumentNullException(nameof(sprite), $"A sprite image is required.");
+
+            try
+            {
+                ButtonSprite?.texture?.Destroy();
+                ButtonSprite?.Destroy();
+            }
+            catch
+            {
+            }
+
+            ButtonSprite = Object.Instantiate(sprite).DontDestroy();
+            ButtonSprite.texture.DontDestroy();
         }
 
         /// <summary>
@@ -189,35 +215,40 @@ namespace Essentials.UI
         /// </summary>
         private void CreateButton()
         {
-            if (KillButtonManager != null || !HudManager.Instance?.KillButton || ButtonSprite == null) return;
+            if (KillButtonManager || !HudManager.Instance?.KillButton) return;
 
             KillButtonManager = Object.Instantiate(HudManager.Instance.KillButton, HudManager.Instance.transform);
 
             KillButtonManager.gameObject.SetActive(HudVisible && Visible);
             KillButtonManager.renderer.enabled = HudVisible && Visible;
 
-            KillButtonManager.renderer.sprite = ButtonSprite;
+            if (ButtonSprite) KillButtonManager.renderer.sprite = ButtonSprite;
 
             PassiveButton button = KillButtonManager.GetComponent<PassiveButton>();
             button.OnClick.RemoveAllListeners();
-            button.OnClick.AddListener(new Action(() =>
+            button.OnClick.AddListener(new Action(PerformClick));
+        }
+
+        /// <summary>
+        /// Performs button click.
+        /// </summary>
+        public void PerformClick()
+        {
+            if (!IsUsable) return;
+
+            CancelEventArgs args = new CancelEventArgs();
+            OnClick?.SafeInvoke(this, args, nameof(OnClick));
+
+            if (args.Cancel) return; // Click was cancelled.
+
+            if (HasEffect)
             {
-                if (!IsUsable) return;
+                StartEffect();
 
-                CancelEventArgs args = new CancelEventArgs();
-                OnClick?.SafeInvoke(this, args, nameof(OnClick));
+                return;
+            }
 
-                if (args.Cancel) return; // Click was cancelled.
-
-                if (HasEffect)
-                {
-                    StartEffect();
-
-                    return;
-                }
-
-                ApplyCooldown();
-            }));
+            ApplyCooldown();
         }
 
         /// <summary>
@@ -268,12 +299,17 @@ namespace Essentials.UI
                 return;
             }
 
-            if (KillButtonManager.transform.localPosition.x > 0F)
+            if (BasePosition == null && KillButtonManager.transform.localPosition.x > 0F)
             {
-                Vector3 vector = KillButtonManager.transform.localPosition;
-                vector.x = -(vector.x + 1.3F);
+                Vector3 v = KillButtonManager.transform.localPosition;
+                v.x = -v.x;// - 1.3F;
 
-                vector += PositionOffsetV3;
+                BasePosition = v;
+            }
+
+            if (BasePosition.HasValue)
+            {
+                Vector3 vector = BasePosition.Value + PositionOffsetV3;
 
                 KillButtonManager.transform.localPosition = vector;
             }

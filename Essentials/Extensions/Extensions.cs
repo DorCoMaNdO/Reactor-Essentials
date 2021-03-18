@@ -65,5 +65,15 @@ namespace Essentials.Extensions
         {
             return DestroyableSingleton<TranslationController>.Instance?.GetString(str, (Il2CppReferenceArray<Il2CppSystem.Object>)parts) ?? "STRMISS";
         }
+
+        public static Vector2 ToVector2(this Vector3 vector)
+        {
+            return new Vector2(vector.x, vector.y);
+        }
+
+        public static Vector3 ToVector3(this Vector2 vector)
+        {
+            return new Vector3(vector.x, vector.y);
+        }
     }
 }

@@ -21,13 +21,20 @@ namespace Essentials.Options
             if (Debug) EssentialsPlugin.Logger.LogInfo($"{sender.Data.PlayerName} sent option(s):");
             foreach ((string ID, CustomOptionType Type, object Value) option in options)
             {
-                CustomOption customOption = Options.FirstOrDefault(o => o.ID.Equals(option.ID, StringComparison.Ordinal) && o.Type == option.Type);
+                CustomOption customOption = Options.FirstOrDefault(o => o.Type == option.Type && o.ID.Equals(option.ID, StringComparison.Ordinal));
 
-                if (Debug) EssentialsPlugin.Logger.LogInfo($"\"{option.ID}\" type: {option.Type}, value: {option.Value}, match: {customOption != null}, current value: {(customOption != null ? customOption.Value : "Unknown")}");
+                if (customOption == null)
+                {
+                    EssentialsPlugin.Logger.LogWarning($"Received option that could not be found: \"{option.ID}\" of type {option.Type}.");
 
-                customOption?.SetValue(option.Value, true);
+                    continue;
+                }
 
-                if (Debug && customOption != null) EssentialsPlugin.Logger.LogInfo($"\"{option.ID}\", set value: {customOption.Value}");
+                if (Debug) EssentialsPlugin.Logger.LogInfo($"\"{option.ID}\" type: {option.Type}, value: {option.Value}, current value: {customOption.Value}");
+
+                customOption.SetValue(option.Value, true);
+
+                if (Debug) EssentialsPlugin.Logger.LogInfo($"\"{option.ID}\", set value: {customOption.Value}");
             }
         }
     }

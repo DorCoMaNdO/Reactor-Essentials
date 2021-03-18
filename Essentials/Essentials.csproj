@@ -2,7 +2,7 @@
   <PropertyGroup>
     <TargetFramework>netstandard2.1</TargetFramework>
     <LangVersion>latest</LangVersion>
-    <Version>0.2.0-dev.3</Version>
+    <Version>0.2.0-dev.4</Version>
 
     <Description>Among Us modding essentials</Description>
     <Authors>CoMaNdO</Authors>
@@ -28,11 +28,11 @@
     <GameVersion>2021.3.5s</GameVersion>
   </PropertyGroup>
   
-  <PropertyGroup Condition="$(Configuration.StartsWith('s'))">
+  <PropertyGroup Condition="$(Configuration.StartsWith('S'))">
     <DefineConstants>$(DefineConstants);STEAM</DefineConstants>
   </PropertyGroup>
 
-  <PropertyGroup Condition="$(Configuration.StartsWith('i'))">
+  <PropertyGroup Condition="$(Configuration.StartsWith('I'))">
     <DefineConstants>$(DefineConstants);ITCH</DefineConstants>
   </PropertyGroup>
       
