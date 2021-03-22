@@ -61,16 +61,28 @@ namespace Essentials.Extensions
             }
         }
 
+        /// <summary>
+        /// Gets translated strings from <see cref="StringNames"/> (an instance of <see cref="TranslationController"/> has to exist).
+        /// </summary>
+        /// <param name="str">String name to retrieve</param>
+        /// <param name="parts">Elements to pass for formatting</param>
+        /// <returns>The translated value of <see cref="str"/></returns>
         public static string GetText(this StringNames str, params object[] parts)
         {
             return DestroyableSingleton<TranslationController>.Instance?.GetString(str, (Il2CppReferenceArray<Il2CppSystem.Object>)parts) ?? "STRMISS";
         }
 
+        /// <summary>
+        /// Converts X, Y of <see cref="Vector3"/> to <see cref="Vector2"/>.
+        /// </summary>
         public static Vector2 ToVector2(this Vector3 vector)
         {
             return new Vector2(vector.x, vector.y);
         }
 
+        /// <summary>
+        /// Converts X, Y of <see cref="Vector2"/> to <see cref="Vector3"/> (Z = 0).
+        /// </summary>
         public static Vector3 ToVector3(this Vector2 vector)
         {
             return new Vector3(vector.x, vector.y);

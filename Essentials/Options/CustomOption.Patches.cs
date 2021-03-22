@@ -42,7 +42,7 @@ namespace Essentials.Options
                 {
                     if (toggleOption == null) continue;
 
-                    ToggleOption toggle = Object.Instantiate(toggleOption, toggleOption.transform.parent).DontDestroy();
+                    ToggleOption toggle = Object.Instantiate(toggleOption, toggleOption.transform.parent);//.DontDestroy();
 
                     option.OnGameOptionCreated(toggle);
 
@@ -54,7 +54,7 @@ namespace Essentials.Options
                 {
                     if (numberOption == null) continue;
 
-                    NumberOption number = Object.Instantiate(numberOption, numberOption.transform.parent).DontDestroy();
+                    NumberOption number = Object.Instantiate(numberOption, numberOption.transform.parent);//.DontDestroy();
 
                     option.OnGameOptionCreated(number);
 
@@ -87,7 +87,7 @@ namespace Essentials.Options
 
                     if (stringOption == null) continue;
 
-                    StringOption str = Object.Instantiate(stringOption, stringOption.transform.parent).DontDestroy();
+                    StringOption str = Object.Instantiate(stringOption, stringOption.transform.parent);//.DontDestroy();
 
                     option.OnGameOptionCreated(str);
 
@@ -329,7 +329,7 @@ namespace Essentials.Options
             {
                 if (AmongUsClient.Instance?.AmHost != true || PlayerControl.AllPlayerControls.Count < 2 || !PlayerControl.LocalPlayer) return;
 
-                Rpc.Send(Options.Select(o => ((string, CustomOptionType, object))o).ToArray());
+                Rpc.Send(Options.Where(o => o.SendRpc).Select(o => ((string, CustomOptionType, object))o).ToArray());
                 //foreach (CustomOption option in Options) Rpc.Send(option);
             }
         }

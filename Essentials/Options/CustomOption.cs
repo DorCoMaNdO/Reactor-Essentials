@@ -1,10 +1,8 @@
-﻿using BepInEx.Configuration;
-using Essentials.Extensions;
+﻿using Essentials.Extensions;
 using Essentials.Helpers;
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using UnityEngine;
 using Object = UnityEngine.Object;
 
 namespace Essentials.Options
@@ -12,15 +10,15 @@ namespace Essentials.Options
     public enum CustomOptionType
     {
         /// <summary>
-        /// A checkmark toggle setting.
+        /// A checkmark toggle option.
         /// </summary>
         Toggle,
         /// <summary>
-        /// A float setting with increase/decrease arrows.
+        /// A float option with increase/decrease arrows.
         /// </summary>
         Number,
         /// <summary>
-        /// A string setting (underlying int) with forward/back arrows.
+        /// A string option (underlying int) with forward/back arrows.
         /// </summary>
         String
     }
@@ -44,7 +42,7 @@ namespace Essentials.Options
         /// <summary>
         /// Enables debug logging messages.
         /// </summary>
-        public static bool Debug { get; set; } = false;
+        public static bool Debug { get; set; } = true;
 
         /// <summary>
         /// The size of lobby options text, game default is 0.65F, Essentials default is 0.5F.
@@ -63,7 +61,7 @@ namespace Essentials.Options
         public static float LobbyTextRowHeight { get; set; } = 0.081F;
 
         /// <summary>
-        /// Clear the game's default settings list before listing custom settings in the lobby.
+        /// Clear the game's default options list before listing custom options in the lobby.
         /// </summary>
         public static bool ClearDefaultLobbyText { get; set; } = false;
 
@@ -79,7 +77,7 @@ namespace Essentials.Options
         /// </remarks>
         public readonly string ConfigID;
         /// <summary>
-        /// Used transmit the value of the setting between players.
+        /// Used transmit the value of the option between players.
         /// </summary>
         /// <remarks>
         /// Combines <see cref="PluginID">PluginID</see> and <see cref="ConfigID">ConfigID</see> with an underscore between.
@@ -107,11 +105,11 @@ namespace Essentials.Options
         /// <summary>
         /// The previous value, may match <see cref="Value">Value</see> when it matches <see cref="DefaultValue">DefaultValue</see>
         /// </summary>
-        protected object OldValue { get; private protected set; }
+        protected virtual object OldValue { get; set; }
         /// <summary>
         /// The current value of the option.
         /// </summary>
-        protected object Value { get; private protected set; }
+        protected virtual object Value { get; set; }
 
         /// <summary>
         /// An event raised before a value change occurs, can alter the final value or cancel the value change. Only raised for the lobby host.
@@ -127,31 +125,41 @@ namespace Essentials.Options
         /// <summary>
         /// The game object that represents the custom option in the lobby options list.
         /// </summary>
-        public OptionBehaviour GameSetting { get; private protected set; }
+        public virtual OptionBehaviour GameSetting { get; protected set; }
 
         /// <summary>
         /// The string format reflecting the option name, result returned by <see cref="GetFormattedName"/>.
-        /// Does not apply to the lobby options menu.
         /// </summary>
-        public Func<CustomOption, string, string> NameStringFormat { get; set; }
+        public virtual Func<CustomOption, string, string> NameStringFormat { get; set; }
 
         /// <summary>
         /// The string format reflecting the value, result returned by <see cref="GetFormattedValue"/>.
         /// </summary>
-        public Func<CustomOption, object, string> StringFormat { get; set; }
+        public virtual Func<CustomOption, object, string> StringFormat { get; set; }
+
+        /// <summary>
+        /// The string format reflecting the option name and value, result returned by <see cref="ToString"/>.
+        /// Used when displaying the option in the lobby option list.
+        /// </summary>
+        public virtual Func<CustomOption, string, string, string> ToStringFormat { get; set; }
 
         /// <summary>
         /// Affects whether the custom option will be visible in the lobby options menu.
         /// </summary>
-        public bool MenuVisible { get; set; } = true;
+        public virtual bool MenuVisible { get; set; } = true;
         /// <summary>
-        /// Affects whether the custom option will appear option list in the lobby.
+        /// Affects whether the custom option will appear in the option list in the lobby.
         /// </summary>
-        public bool HudVisible { get; set; } = true;
+        public virtual bool HudVisible { get; set; } = true;
 
-        /// <param name="id">The ID of the setting, used to maintain the last value when <paramref name="saveValue"/> is true and to transmit the value between players</param>
-        /// <param name="name">The name/title of the setting</param>
-        /// <param name="saveValue">Saves the last value of the setting to apply again when the game is reopened (only applies for the lobby host)</param>
+        /// <summary>
+        /// Whether the custom option and it's value changes will be sent through RPC.
+        /// </summary>
+        public virtual bool SendRpc { get { return true; } }
+
+        /// <param name="id">The ID of the option, used to maintain the last value when <paramref name="saveValue"/> is true and to transmit the value between players</param>
+        /// <param name="name">The name/title of the option</param>
+        /// <param name="saveValue">Saves the last value of the option to apply again when the game is reopened (only applies for the lobby host)</param>
         /// <param name="type">The option type. See <see cref="CustomOptionType"/>.</param>
         /// <param name="value">The initial/default value</param>
         protected CustomOption(string id, string name, bool saveValue, CustomOptionType type, object value)
@@ -189,7 +197,7 @@ namespace Essentials.Options
         /// </summary>
         /// <param name="value">The new value</param>
         /// <param name="oldValue">The current value</param>
-        private protected virtual OptionOnValueChangedEventArgs OnValueChangedEventArgs(object value, object oldValue)
+        protected virtual OptionOnValueChangedEventArgs OnValueChangedEventArgs(object value, object oldValue)
         {
             return new OptionOnValueChangedEventArgs(value, Value);
         }
@@ -199,7 +207,7 @@ namespace Essentials.Options
         /// </summary>
         /// <param name="value">The new value</param>
         /// <param name="oldValue">The current value</param>
-        private protected virtual OptionValueChangedEventArgs ValueChangedEventArgs(object value, object oldValue)
+        protected virtual OptionValueChangedEventArgs ValueChangedEventArgs(object value, object oldValue)
         {
             return new OptionValueChangedEventArgs(value, Value);
         }
@@ -231,7 +239,7 @@ namespace Essentials.Options
         /// Called when the game object is (re)created for this option.
         /// </summary>
         /// <param name="o">The game object that was created for this option</param>
-        private protected virtual void GameOptionCreated(OptionBehaviour o)
+        protected virtual void GameOptionCreated(OptionBehaviour o)
         {
             // throw unimplemented?
         }
@@ -255,202 +263,6 @@ namespace Essentials.Options
         }
 
         /// <summary>
-        /// Adds a toggle option.
-        /// </summary>
-        /// <param name="id">The ID of the setting, used to maintain the last value when <paramref name="saveValue"/> is true and to transmit the value between players</param>
-        /// <param name="name">The name/title of the setting</param>
-        /// <param name="saveValue">Saves the last value of the setting to apply again when the game is reopened (only applies for the lobby host)</param>
-        /// <param name="value">The initial/default value</param>
-        public static CustomToggleOption AddToggle(string id, string name, bool saveValue, bool value)
-        {
-            return new CustomToggleOption(id, name, saveValue, value);
-        }
-
-        /// <summary>
-        /// Adds a toggle option.
-        /// </summary>
-        /// <param name="id">The ID of the setting, used to maintain the last value when <paramref name="saveValue"/> is true and to transmit the value between players</param>
-        /// <param name="name">The name/title of the setting</param>
-        /// <param name="value">The initial/default value</param>
-        public static CustomToggleOption AddToggle(string id, string name, bool value)
-        {
-            return AddToggle(id, name, true, value);
-        }
-
-        /// <summary>
-        /// Adds a toggle option.
-        /// </summary>
-        /// <param name="name">The name/title of the setting, also used as the setting's ID</param>
-        /// <param name="saveValue">Saves the last value of the setting to apply again when the game is reopened (only applies for the lobby host)</param>
-        /// <param name="value">The initial/default value</param>
-        public static CustomToggleOption AddToggle(string name, bool saveValue, bool value)
-        {
-            return AddToggle(name, name, saveValue, value);
-        }
-
-        /// <summary>
-        /// Adds a toggle option.
-        /// </summary>
-        /// <param name="name">The name/title of the setting</param>
-        /// <param name="value">The initial/default value</param>
-        public static CustomToggleOption AddToggle(string name, bool value)
-        {
-            return AddToggle(name, name, value);
-        }
-
-        /// <summary>
-        /// Adds a number option.
-        /// </summary>
-        /// <param name="id">The ID of the setting, used to maintain the last value when <paramref name="saveValue"/> is true and to transmit the value between players</param>
-        /// <param name="name">The name/title of the setting</param>
-        /// <param name="saveValue">Saves the last value of the setting to apply again when the game is reopened (only applies for the lobby host)</param>
-        /// <param name="value">The initial/default value</param>
-        /// <param name="min">The lowest value permitted, may be overriden if <paramref name="value"/> is lower</param>
-        /// <param name="max">The highest value permitted, may be overriden if <paramref name="value"/> is higher</param>
-        /// <param name="increment">The increment or decrement steps when <see cref="CustomNumberOption.Increase"/> or <see cref="CustomNumberOption.Decrease"/> are called</param>
-        public static CustomNumberOption AddNumber(string id, string name, bool saveValue, float value, float min = 0.25F, float max = 5F, float increment = 0.25F)
-        {
-            return new CustomNumberOption(id, name, saveValue, value, min, max, increment);
-        }
-
-        /// <summary>
-        /// Adds a number option.
-        /// </summary>
-        /// <param name="id">The ID of the setting, used to maintain the last value when <paramref name="saveValue"/> is true and to transmit the value between players</param>
-        /// <param name="name">The name/title of the setting</param>
-        /// <param name="value">The initial/default value</param>
-        /// <param name="min">The lowest value permitted, may be overriden if <paramref name="value"/> is lower</param>
-        /// <param name="max">The highest value permitted, may be overriden if <paramref name="value"/> is higher</param>
-        /// <param name="increment">The increment or decrement steps when <see cref="CustomNumberOption.Increase"/> or <see cref="CustomNumberOption.Decrease"/> are called</param>
-        public static CustomNumberOption AddNumber(string id, string name, float value, float min = 0.25F, float max = 5F, float increment = 0.25F)
-        {
-            return AddNumber(id, name, true, value, min, max, increment);
-        }
-
-        /// <summary>
-        /// Adds a number option.
-        /// </summary>
-        /// <param name="name">The name/title of the setting</param>
-        /// <param name="saveValue">Saves the last value of the setting to apply again when the game is reopened (only applies for the lobby host)</param>
-        /// <param name="value">The initial/default value</param>
-        /// <param name="min">The lowest value permitted, may be overriden if <paramref name="value"/> is lower</param>
-        /// <param name="max">The highest value permitted, may be overriden if <paramref name="value"/> is higher</param>
-        /// <param name="increment">The increment or decrement steps when <see cref="CustomNumberOption.Increase"/> or <see cref="CustomNumberOption.Decrease"/> are called</param>
-        public static CustomNumberOption AddNumber(string name, bool saveValue, float value, float min = 0.25F, float max = 5F, float increment = 0.25F)
-        {
-            return AddNumber(name, name, saveValue, value, min, max, increment);
-        }
-
-        /// <summary>
-        /// Adds a number option.
-        /// </summary>
-        /// <param name="name">The name/title of the setting</param>
-        /// <param name="value">The initial/default value</param>
-        /// <param name="min">The lowest value permitted, may be overriden if <paramref name="value"/> is lower</param>
-        /// <param name="max">The highest value permitted, may be overriden if <paramref name="value"/> is higher</param>
-        /// <param name="increment">The increment or decrement steps when <see cref="CustomNumberOption.Increase"/> or <see cref="CustomNumberOption.Decrease"/> are called</param>
-        public static CustomNumberOption AddNumber(string name, float value, float min = 0.25F, float max = 5F, float increment = 0.25F)
-        {
-            return AddNumber(name, true, value, min, max, increment);
-        }
-
-        /// <summary>
-        /// Adds a string option.
-        /// </summary>
-        /// <param name="id">The ID of the setting, used to maintain the last value when <paramref name="saveValue"/> is true and to transmit the value between players</param>
-        /// <param name="name">The name/title of the setting</param>
-        /// <param name="saveValue">Saves the last value of the setting to apply again when the game is reopened (only applies for the lobby host)</param>
-        /// <param name="values">The string values that may be displayed, initial/default value is index 0</param>
-        public static CustomStringOption AddString(string id, string name, bool saveValue, params string[] values)
-        {
-            return new CustomStringOption(id, name, saveValue, values);
-        }
-
-        /// <summary>
-        /// Adds a string option.
-        /// </summary>
-        /// <param name="id">The ID of the setting, used to maintain the last value when <paramref name="saveValue"/> is true and to transmit the value between players</param>
-        /// <param name="name">The name/title of the setting</param>
-        /// <param name="values">The string values that may be displayed, initial/default value is index 0</param>
-        public static CustomStringOption AddString(string id, string name, params string[] values)
-        {
-            return AddString(id, name, true, values);
-        }
-
-        /// <summary>
-        /// Adds a string option.
-        /// </summary>
-        /// <param name="name">The name/title of the setting</param>
-        /// <param name="saveValue">Saves the last value of the setting to apply again when the game is reopened (only applies for the lobby host)</param>
-        /// <param name="values">The string values that may be displayed, initial/default value is index 0</param>
-        public static CustomStringOption AddString(string name, bool saveValue, params string[] values)
-        {
-            return AddString(name, name, saveValue, values);
-        }
-
-        /// <summary>
-        /// Adds a string option.
-        /// </summary>
-        /// <param name="name">The name/title of the setting</param>
-        /// <param name="values">The string values that may be displayed, initial/default value is index 0</param>
-        public static CustomStringOption AddString(string name, params string[] values)
-        {
-            return AddString(name, name, values);
-        }
-
-        /*public static CustomKeyValueOption AddKeyValue(string id, string name, string[] values, Action<int> callback)
-        {
-            CustomKeyValueOption option = new CustomKeyValueOption(id, name, values);
-            
-            void KeyValueCallback(object newVal, bool report)
-            {
-                int newValue = (int)newVal;
-                
-                //int oldValue = (int)option.Value;
-                option.Value = newValue;
-                
-                if (option.GameSetting is KeyValueOption kv)
-                {
-                    if (report && AmongUsClient.Instance?.AmHost == true && PlayerControl.LocalPlayer)
-                    {
-                        Rpc.Instance.Send(new Rpc.Data(option));
-
-                        option.ConfigEntry.Value = newValue;
-                    }
-
-                    //kv.oldValue = oldValue;
-                    kv.Selected = kv.oldValue = newValue;
-                    kv.ValueText.Text = option.GetFormattedValue();
-                }
-                
-                try
-                {
-                    callback?.Invoke(newValue);
-                }
-                catch (Exception e)
-                {
-                    EssentialsPlugin.Logger.LogInfo($"KeyValueCallback \"{name}\" failed: {e}");
-                }
-            }
-            
-            option.Callback = new Action<object, bool>(KeyValueCallback);
-            
-            if (option.Value != option.DefaultValue) option.Callback.Invoke(option.Value, false);
-            
-            return option;
-        }
-
-        public static CustomKeyValueOption AddKeyValue(string id, string name, params string[] values)
-        {
-            return AddKeyValue(id, name, values, null);
-        }
-
-        public static CustomKeyValueOption AddKeyValue(string name, params string[] values)
-        {
-            return AddKeyValue(name, name, values);
-        }*/
-
-        /// <summary>
         /// Restores the option to it's default value.
         /// </summary>
         public void SetToDefault(bool raiseEvents = true)
@@ -466,7 +278,7 @@ namespace Essentials.Options
         /// </remarks>
         /// <param name="value">The new value</param>
         /// <param name="raiseEvents">Whether or not to raise events</param>
-        private protected void SetValue(object value, bool raiseEvents)
+        protected void SetValue(object value, bool raiseEvents)
         {
             if (value?.GetType() != Value?.GetType() || Value == value) return; // Refuse value updates that don't match the option type
 
@@ -499,7 +311,7 @@ namespace Essentials.Options
 
             Value = value;
 
-            if (GameSetting != null && AmongUsClient.Instance?.AmHost == true && PlayerControl.LocalPlayer) Rpc.Send(new (string, CustomOptionType, object)[] { this });//Rpc.Send(this);
+            if (SendRpc && GameSetting != null && AmongUsClient.Instance?.AmHost == true && PlayerControl.LocalPlayer) Rpc.Send(new (string, CustomOptionType, object)[] { this });//Rpc.Send(this);
 
             try
             {
@@ -599,393 +411,7 @@ namespace Essentials.Options
         /// <returns><see cref="object.ToString()"/> or the return value of <see cref="StringFormat"/> when provided.</returns>
         public override string ToString()
         {
-            return $"{GetFormattedName()}: {GetFormattedValue()}[]";
+            return $"{ToStringFormat?.Invoke(this, GetFormattedName(), GetFormattedValue()) ?? $"{GetFormattedName()}: {GetFormattedValue()}"}[]";
         }
     }
-
-    /// <summary>
-    /// A derivative of <see cref="CustomOption"/>, handling toggle options.
-    /// </summary>
-    public class CustomToggleOption : CustomOption
-    {
-        /// <summary>
-        /// The config entry used to store this option's value.
-        /// </summary>
-        /// <remarks>
-        /// Can be null when <see cref="CustomOption.SaveValue"/> is false.
-        /// </remarks>
-        public readonly ConfigEntry<bool> ConfigEntry;
-
-        /// <summary>
-        /// Adds a toggle option.
-        /// </summary>
-        /// <param name="id">The ID of the setting, used to maintain the last value when <paramref name="saveValue"/> is true and to transmit the value between players</param>
-        /// <param name="name">The name/title of the setting</param>
-        /// <param name="saveValue">Saves the last value of the setting to apply again when the game is reopened (only applies for the lobby host)</param>
-        /// <param name="value">The initial/default value</param>
-        protected internal CustomToggleOption(string id, string name, bool saveValue, bool value) : base(id, name, saveValue, CustomOptionType.Toggle, value)
-        {
-            ValueChanged += (sender, args) =>
-            {
-                if (GameSetting is ToggleOption && AmongUsClient.Instance?.AmHost == true && PlayerControl.LocalPlayer && ConfigEntry != null) ConfigEntry.Value = (bool)Value;
-            };
-
-            ConfigEntry = saveValue ? EssentialsPlugin.Instance.Config.Bind(PluginID, ConfigID, (bool)DefaultValue) : null;
-            SetValue(ConfigEntry == null ? GetDefaultValue() : ConfigEntry.Value, false);
-
-            StringFormat = (sender, value) => ((bool)value) ? "On" : "Off";
-        }
-
-        private protected override OptionOnValueChangedEventArgs OnValueChangedEventArgs(object value, object oldValue)
-        {
-            return new ToggleOptionOnValueChangedEventArgs(value, Value);
-        }
-
-        private protected override OptionValueChangedEventArgs ValueChangedEventArgs(object value, object oldValue)
-        {
-            return new ToggleOptionValueChangedEventArgs(value, Value);
-        }
-
-        private protected override void GameOptionCreated(OptionBehaviour o)
-        {
-            if (o is not ToggleOption toggle) return;
-
-            toggle.TitleText.Text = Name;
-            toggle.CheckMark.enabled = toggle.oldValue = GetValue();
-        }
-
-        /// <summary>
-        /// Toggles the option value.
-        /// </summary>
-        public void Toggle()
-        {
-            SetValue(!GetValue());
-        }
-
-        private void SetValue(bool value, bool raiseEvents)
-        {
-            base.SetValue(value, raiseEvents);
-        }
-
-        /// <summary>
-        /// Sets a new value
-        /// </summary>
-        /// <param name="value">The new value</param>
-        public void SetValue(bool value)
-        {
-            SetValue(value, true);
-        }
-
-        /// <returns>The boolean-casted default value.</returns>
-        public bool GetDefaultValue()
-        {
-            return (bool)DefaultValue;
-        }
-
-        /// <returns>The boolean-casted old value.</returns>
-        public bool GetOldValue()
-        {
-            return (bool)OldValue;
-        }
-
-        /// <returns>The boolean-casted current value.</returns>
-        public bool GetValue()
-        {
-            return (bool)Value;
-        }
-    }
-
-    /// <summary>
-    /// A derivative of <see cref="CustomOption"/>, handling number options.
-    /// </summary>
-    public class CustomNumberOption : CustomOption
-    {
-        /// <summary>
-        /// The config entry used to store this option's value.
-        /// </summary>
-        /// <remarks>
-        /// Can be null when <see cref="CustomOption.SaveValue"/> is false.
-        /// </remarks>
-        public readonly ConfigEntry<float> ConfigEntry;
-
-        /// <summary>
-        /// A "modifier" string format, simply appending 'x' after the value.
-        /// </summary>
-        public static Func<CustomOption, object, string> ModifierStringFormat { get; } = (sender, value) => $"{value:0.0}x";
-
-        /// <summary>
-        /// A "seconds" string format, simply appending 's' after the value.
-        /// </summary>
-        public static Func<CustomOption, object, string> SecondsStringFormat { get; } = (sender, value) => $"{value:0.0}s";
-
-        //public new float Value { get { return (float)base.Value; } private protected set { base.Value = value; } }
-
-        /// <summary>
-        /// The lowest permitted value.
-        /// </summary>
-        public readonly float Min;
-        /// <summary>
-        /// The highest permitted value.
-        /// </summary>
-        public readonly float Max;
-        /// <summary>
-        /// The increment or decrement steps when <see cref="Increase"/> or <see cref="Decrease"/> are called.
-        /// </summary>
-        public readonly float Increment;
-
-        /// <param name="id">The ID of the setting, used to maintain the last value when <paramref name="saveValue"/> is true and to transmit the value between players</param>
-        /// <param name="name">The name/title of the setting</param>
-        /// <param name="saveValue">Saves the last value of the setting to apply again when the game is reopened (only applies for the lobby host)</param>
-        /// <param name="value">The initial/default value</param>
-        /// <param name="min">The lowest value permitted, may be overriden if <paramref name="value"/> is lower</param>
-        /// <param name="max">The highest value permitted, may be overriden if <paramref name="value"/> is higher</param>
-        /// <param name="increment">The increment or decrement steps when <see cref="CustomNumberOption.Increase"/> or <see cref="CustomNumberOption.Decrease"/> are called</param>
-        protected internal CustomNumberOption(string id, string name, bool saveValue, float value, float min = 0.25F, float max = 5F, float increment = 0.25F) : base(id, name, saveValue, CustomOptionType.Number, value)
-        {
-            Min = Math.Min(value, min);
-            Max = Math.Max(value, max);
-
-            Increment = increment;
-
-            ValueChanged += (sender, args) =>
-            {
-                if (GameSetting is NumberOption && AmongUsClient.Instance?.AmHost == true && PlayerControl.LocalPlayer && ConfigEntry != null) ConfigEntry.Value = (float)Value;
-            };
-
-            ConfigEntry = saveValue ? EssentialsPlugin.Instance.Config.Bind(PluginID, ConfigID, (float)DefaultValue) : null;
-            SetValue(ConfigEntry == null ? GetDefaultValue() : ConfigEntry.Value, false);
-
-            StringFormat = (sender, value) => value.ToString();
-        }
-
-        private protected override OptionOnValueChangedEventArgs OnValueChangedEventArgs(object value, object oldValue)
-        {
-            return new NumberOptionOnValueChangedEventArgs(value, Value);
-        }
-
-        private protected override OptionValueChangedEventArgs ValueChangedEventArgs(object value, object oldValue)
-        {
-            return new NumberOptionValueChangedEventArgs(value, Value);
-        }
-
-        private protected override void GameOptionCreated(OptionBehaviour o)
-        {
-            if (o is not NumberOption number) return;
-
-            number.TitleText.Text = Name;
-            number.ValidRange = new FloatRange(Min, Max);
-            number.Increment = Increment;
-#if S20201209
-            number.Value = number.oldValue = GetValue();
-#elif S20210305
-            number.Value = number.Field_3 = GetValue();
-#endif
-            number.ValueText.Text = GetFormattedValue();
-        }
-
-        /// <summary>
-        /// Increases <see cref="CustomOption.Value"/> by <see cref="Increment"/> while it's lower or until it matches <see cref="Max"/>.
-        /// </summary>
-        public void Increase()
-        {
-            SetValue(GetValue() + Increment);
-        }
-
-        /// <summary>
-        /// Decreases <see cref="CustomOption.Value"/> by <see cref="Increment"/> while it's higher or until it matches <see cref="Min"/>.
-        /// </summary>
-        public void Decrease()
-        {
-            SetValue(GetValue() - Increment);
-        }
-
-        private void SetValue(float value, bool raiseEvents)
-        {
-            value = Mathf.Clamp(value, Min, Max);
-
-            base.SetValue(value, raiseEvents);
-        }
-
-        /// <summary>
-        /// Sets a new value
-        /// </summary>
-        /// <param name="value">The new value</param>
-        public void SetValue(float value)
-        {
-            SetValue(value, true);
-        }
-
-        /// <returns>The float-casted default value.</returns>
-        public float GetDefaultValue()
-        {
-            return (float)DefaultValue;
-        }
-
-        /// <returns>The float-casted old value.</returns>
-        public float GetOldValue()
-        {
-            return (float)OldValue;
-        }
-
-        /// <returns>The float-casted current value.</returns>
-        public float GetValue()
-        {
-            return (float)Value;
-        }
-    }
-
-    /// <summary>
-    /// A derivative of <see cref="CustomOption"/>, handling string options.
-    /// </summary>
-    public class CustomStringOption : CustomOption
-    {
-        /// <summary>
-        /// The config entry used to store this option's value.
-        /// </summary>
-        /// <remarks>
-        /// Can be null when <see cref="CustomOption.SaveValue"/> is false.
-        /// </remarks>
-        public readonly ConfigEntry<int> ConfigEntry;
-
-        /// <summary>
-        /// The text values the option can present.
-        /// </summary>
-        public readonly string[] Values;
-
-        /// <param name="id">The ID of the setting, used to maintain the last value when <paramref name="saveValue"/> is true and to transmit the value between players</param>
-        /// <param name="name">The name/title of the setting</param>
-        /// <param name="saveValue">Saves the last value of the setting to apply again when the game is reopened (only applies for the lobby host)</param>
-        /// <param name="values">The string values that may be displayed, initial/default value is index 0</param>
-        public CustomStringOption(string id, string name, bool saveValue, string[] values) : base(id, name, saveValue, CustomOptionType.String, 0)
-        {
-            Values = values;
-
-            ValueChanged += (sender, args) =>
-            {
-                if (GameSetting is StringOption && AmongUsClient.Instance?.AmHost == true && PlayerControl.LocalPlayer && ConfigEntry != null) ConfigEntry.Value = (int)Value;
-            };
-
-            ConfigEntry = saveValue ? EssentialsPlugin.Instance.Config.Bind(PluginID, ConfigID, (int)DefaultValue) : null;
-            SetValue(ConfigEntry == null ? GetDefaultValue() : ConfigEntry.Value, false);
-
-            StringFormat = (sender, value) => Values[(int)value];
-        }
-
-        private protected override OptionOnValueChangedEventArgs OnValueChangedEventArgs(object value, object oldValue)
-        {
-            return new StringOptionOnValueChangedEventArgs(value, Value);
-        }
-
-        private protected override OptionValueChangedEventArgs ValueChangedEventArgs(object value, object oldValue)
-        {
-            return new StringOptionValueChangedEventArgs(value, Value);
-        }
-
-        private protected override void GameOptionCreated(OptionBehaviour o)
-        {
-            if (o is not StringOption str) return;
-
-            str.TitleText.Text = Name;
-            str.Value = str.oldValue = GetValue();
-            str.ValueText.Text = GetFormattedValue();
-        }
-
-        /// <summary>
-        /// Increases <see cref="CustomOption.Value"/> by 1 while it's lower than the length of <see cref="Values"/> or sets it back to 0 once the length is exceeded.
-        /// </summary>
-        public void Increase()
-        {
-            int next = GetValue() + 1;
-            if (next >= Values.Length) next = 0;
-
-            SetValue(next);
-        }
-
-        /// <summary>
-        /// Decreases <see cref="CustomOption.Value"/> by 1 while it's higher than 0 or sets it back to the length of <see cref="Values"/>-1.
-        /// </summary>
-        public void Decrease()
-        {
-            int next = GetValue() - 1;
-            if (next < 0) next = Values.Length - 1;
-
-            SetValue(next);
-        }
-
-        private void SetValue(int value, bool raiseEvents)
-        {
-            if (value < 0 || value >= Values.Length) value = (int)DefaultValue;
-
-            base.SetValue(value, raiseEvents);
-        }
-
-        /// <summary>
-        /// Sets a new value
-        /// </summary>
-        /// <param name="value">The new value</param>
-        public void SetValue(int value)
-        {
-            SetValue(value, true);
-        }
-
-        /// <returns>The int-casted default value.</returns>
-        public int GetDefaultValue()
-        {
-            return (int)DefaultValue;
-        }
-
-        /// <returns>The int-casted old value.</returns>
-        public int GetOldValue()
-        {
-            return (int)OldValue;
-        }
-
-        /// <returns>The int-casted current value.</returns>
-        public int GetValue()
-        {
-            return (int)Value;
-        }
-
-        /// <returns>The text at index <paramref name="value"/>.</returns>
-        public string GetText(int value)
-        {
-            return Values[value];
-        }
-
-        /// <returns>The current text.</returns>
-        public string GetText()
-        {
-            return GetText(GetValue());
-        }
-    }
-
-    //public class CustomKeyValueOption : CustomStringOption
-    //{
-    //    protected internal CustomKeyValueOption(string id, string name, bool saveValue, string[] values) : base(id, name, saveValue, values)
-    //    {
-    //        GameSettingCallback = new Action<OptionBehaviour>(GameOptionCreated);
-    //    }
-
-    //    private void GameOptionCreated(OptionBehaviour o)
-    //    {
-    //        if (!(o is KeyValueOption kv)) return;
-
-    //        kv.OnValueChanged = new Action<OptionBehaviour>((option) => { });
-
-    //        kv.name = kv.gameObject.name = ID;
-
-    //        kv.TitleText.Text = Name;
-    //        if(kv.Values!=null)
-    //        {
-    //            kv.Values.Clear();
-    //            for (int i = 0; i < Values.Length; i++) kv.Values.Add(new Il2CppSystem.Collections.Generic.KeyValuePair<string, int>(Values[i], i));
-    //        }
-    //        /*kv.Values = new List<Il2CppSystem.Collections.Generic.KeyValuePair<string, int>>();
-    //        for (int i = 0; i < Values.Length; i++) kv.Values.Add(new Il2CppSystem.Collections.Generic.KeyValuePair<string, int>(Values[i], i));*/
-    //        kv.Selected = kv.oldValue = GetValue();
-    //        kv.ValueText.Text = GetFormattedValue();
-
-    //        GameSetting = kv;
-    //    }
-    //}
 }
