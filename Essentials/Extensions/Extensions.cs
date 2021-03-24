@@ -77,7 +77,15 @@ namespace Essentials.Extensions
         /// </summary>
         public static Vector2 ToVector2(this Vector3 vector)
         {
-            return new Vector2(vector.x, vector.y);
+            return vector;
+        }
+
+        /// <summary>
+        /// Converts X, Y of <see cref="Vector2"/> to <see cref="Vector3"/> with specified Z.
+        /// </summary>
+        public static Vector3 ToVector3(this Vector2 vector, float z)
+        {
+            return new Vector3(vector.x, vector.y, z);
         }
 
         /// <summary>
@@ -85,7 +93,7 @@ namespace Essentials.Extensions
         /// </summary>
         public static Vector3 ToVector3(this Vector2 vector)
         {
-            return new Vector3(vector.x, vector.y);
+            return vector.ToVector3(0);
         }
     }
 }

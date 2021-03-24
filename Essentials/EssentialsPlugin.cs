@@ -1,6 +1,7 @@
 ﻿using BepInEx;
 using BepInEx.IL2CPP;
 using BepInEx.Logging;
+using Essentials.UI;
 using HarmonyLib;
 using Reactor;
 using Reactor.Patches;
@@ -36,6 +37,8 @@ namespace Essentials
                 int index = text.Text.IndexOf('\n');
                 text.Text = text.Text.Insert(index == -1 ? text.Text.Length - 1 : index, "\nEssentials " + typeof(EssentialsPlugin).Assembly.GetCustomAttribute<AssemblyInformationalVersionAttribute>().InformationalVersion);
             };
+
+            HudPosition.Load();
         }
     }
 }

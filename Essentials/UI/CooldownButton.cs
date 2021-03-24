@@ -6,6 +6,9 @@ using UnityEngine;
 
 namespace Essentials.UI
 {
+    /// <summary>
+    /// Cooldown button, made the mimic the behaviour of the game's kill button with some tweaks.
+    /// </summary>
     public partial class CooldownButton : GameplayButton
     {
         protected static List<CooldownButton> CooldownButtons = new List<CooldownButton>();
@@ -103,20 +106,32 @@ namespace Essentials.UI
         /// </summary>
         public virtual event EventHandler<EventArgs> CooldownEnded;
 
-        public CooldownButton(Sprite sprite, Vector2 positionOffset, float cooldown, float effectDuration = 0F, float initialCooldown = 0F) :
-            base(sprite, positionOffset)
+        /// <summary>
+        /// Call in Plugin.Load
+        /// </summary>
+        /// <param name="sprite">The button's sprite, null for kill button</param>
+        public CooldownButton(Sprite sprite, HudPosition position, float cooldown, float effectDuration = 0F, float initialCooldown = 0F) :
+            base(sprite, position)
         {
             Setup(cooldown, effectDuration, initialCooldown);
         }
 
-        public CooldownButton(byte[] imageData, Vector2 positionOffset, float cooldown, float effectDuration = 0F, float initialCooldown = 0F) :
-            base(imageData, positionOffset)
+        /// <summary>
+        /// Call in Plugin.Load
+        /// </summary>
+        /// <param name="imageData">Encoded image data</param>
+        public CooldownButton(byte[] imageData, HudPosition position, float cooldown, float effectDuration = 0F, float initialCooldown = 0F) :
+            base(imageData, position)
         {
             Setup(cooldown, effectDuration, initialCooldown);
         }
 
-        public CooldownButton(string imageEmbededResourcePath, Vector2 positionOffset, float cooldown, float effectDuration = 0F, float initialCooldown = 0F) :
-            this(GetBytesFromEmbeddedResource(Assembly.GetCallingAssembly(), imageEmbededResourcePath), positionOffset, cooldown, effectDuration, initialCooldown)
+        /// <summary>
+        /// Call in Plugin.Load
+        /// </summary>
+        /// <param name="imageEmbededResourcePath">Path to embedded resource containing an image</param>
+        public CooldownButton(string imageEmbededResourcePath, HudPosition position, float cooldown, float effectDuration = 0F, float initialCooldown = 0F) :
+            this(GetBytesFromEmbeddedResource(Assembly.GetCallingAssembly(), imageEmbededResourcePath), position, cooldown, effectDuration, initialCooldown)
         {
         }
 
@@ -219,12 +234,13 @@ namespace Essentials.UI
             if (startCooldown) ApplyCooldown();
         }
 
+        /// <summary>
+        /// Updates the button's remaining cooldown or effect duration.
+        /// </summary>
         protected virtual void UpdateCooldown()
         {
             if (!IsCoolingDown || (!IsEffectActive || EffectCanPause) && !CanUpdateCooldown) return;
 
-            //if (IsCoolingDown && (IsEffectActive || Visible && PlayerControl.LocalPlayer.CanMove))
-            //{
             CooldownTime -= Time.deltaTime;
 
             if (!IsCoolingDown)
@@ -238,7 +254,6 @@ namespace Essentials.UI
                     RaiseCooldownEnded();
                 }
             }
-            //}
         }
 
         protected override void SetVisible(bool visible)

@@ -2,10 +2,15 @@
 
 namespace Essentials.Options
 {
+    public interface IToggleOption
+    {
+        public void Toggle();
+    }
+
     /// <summary>
     /// A derivative of <see cref="CustomOption"/>, handling toggle options.
     /// </summary>
-    public class CustomToggleOption : CustomOption
+    public class CustomToggleOption : CustomOption, IToggleOption
     {
         /// <summary>
         /// The config entry used to store this option's value.
@@ -56,12 +61,12 @@ namespace Essentials.Options
         /// <summary>
         /// Toggles the option value.
         /// </summary>
-        public void Toggle()
+        public virtual void Toggle()
         {
             SetValue(!GetValue());
         }
 
-        private void SetValue(bool value, bool raiseEvents)
+        protected virtual void SetValue(bool value, bool raiseEvents)
         {
             base.SetValue(value, raiseEvents);
         }
@@ -70,25 +75,25 @@ namespace Essentials.Options
         /// Sets a new value
         /// </summary>
         /// <param name="value">The new value</param>
-        public void SetValue(bool value)
+        public virtual void SetValue(bool value)
         {
             SetValue(value, true);
         }
 
         /// <returns>The boolean-casted default value.</returns>
-        public bool GetDefaultValue()
+        public virtual bool GetDefaultValue()
         {
             return (bool)DefaultValue;
         }
 
         /// <returns>The boolean-casted old value.</returns>
-        public bool GetOldValue()
+        public virtual bool GetOldValue()
         {
             return (bool)OldValue;
         }
 
         /// <returns>The boolean-casted current value.</returns>
-        public bool GetValue()
+        public virtual bool GetValue()
         {
             return (bool)Value;
         }

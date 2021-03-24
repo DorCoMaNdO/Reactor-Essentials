@@ -2,7 +2,7 @@
   <PropertyGroup>
     <TargetFramework>netstandard2.1</TargetFramework>
     <LangVersion>latest</LangVersion>
-    <Version>0.2.0-dev.5</Version>
+    <Version>0.2.0-dev.6</Version>
 
     <Description>Among Us modding essentials</Description>
     <Authors>CoMaNdO</Authors>
@@ -27,7 +27,7 @@
     <Mappings>NuclearPowered/Mappings:0.2.0</Mappings>
     <GameVersion>2021.3.5s</GameVersion>
   </PropertyGroup>
-  
+
   <PropertyGroup Condition="$(Configuration.StartsWith('S'))">
     <DefineConstants>$(DefineConstants);STEAM</DefineConstants>
   </PropertyGroup>
@@ -35,7 +35,7 @@
   <PropertyGroup Condition="$(Configuration.StartsWith('I'))">
     <DefineConstants>$(DefineConstants);ITCH</DefineConstants>
   </PropertyGroup>
-      
+
   <ItemGroup>
     <Deobfuscate Include="$(AmongUs)\BepInEx\plugins\Reactor-$(GameVersion).dll" />
 

@@ -20,7 +20,7 @@
                 args.Cancel = true;
             };
 
-            ToStringFormat = (_, name, _) => $"{name}[]";
+            ToStringFormat = (_, name, _) => name;
 
             MenuVisible = menu;
             HudVisible = hud;

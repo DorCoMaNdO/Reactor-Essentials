@@ -14,7 +14,7 @@ namespace Essentials.Options
         /// </summary>
         Toggle,
         /// <summary>
-        /// A float option with increase/decrease arrows.
+        /// A float number option with increase/decrease buttons.
         /// </summary>
         Number,
         /// <summary>
@@ -53,12 +53,6 @@ namespace Essentials.Options
         /// Enables or disables the lobby options text scroller.
         /// </summary>
         public static bool LobbyTextScroller { get; set; } = true;
-
-        /// <summary>
-        /// The height of a row in the lobby options, if <see cref="LobbyTextScale"/> is changed and <see cref="LobbyTextScroller"/> is enabled,
-        /// this should be adjusted for the scroller to work correctly.
-        /// </summary>
-        public static float LobbyTextRowHeight { get; set; } = 0.081F;
 
         /// <summary>
         /// Clear the game's default options list before listing custom options in the lobby.
@@ -218,12 +212,9 @@ namespace Essentials.Options
 
             try
             {
-                // Could move some logic to this callback, though pointless when the methods leading to this callback to be called are overriden.
                 o.OnValueChanged = new Action<OptionBehaviour>((_) => { });
 
                 o.name = o.gameObject.name = ID;
-
-                //o.gameObject.SetActive(true);
 
                 GameOptionCreated(o);
             }
@@ -278,7 +269,7 @@ namespace Essentials.Options
         /// </remarks>
         /// <param name="value">The new value</param>
         /// <param name="raiseEvents">Whether or not to raise events</param>
-        protected void SetValue(object value, bool raiseEvents)
+        protected virtual void SetValue(object value, bool raiseEvents)
         {
             if (value?.GetType() != Value?.GetType() || Value == value) return; // Refuse value updates that don't match the option type
 
@@ -311,7 +302,7 @@ namespace Essentials.Options
 
             Value = value;
 
-            if (SendRpc && GameSetting != null && AmongUsClient.Instance?.AmHost == true && PlayerControl.LocalPlayer) Rpc.Send(new (string, CustomOptionType, object)[] { this });//Rpc.Send(this);
+            if (SendRpc && GameSetting != null && AmongUsClient.Instance?.AmHost == true && PlayerControl.LocalPlayer) Rpc.Send(new (string, CustomOptionType, object)[] { this });
 
             try
             {
@@ -355,18 +346,19 @@ namespace Essentials.Options
 
             if (raiseEvents) ValueChanged?.SafeInvoke(this, ValueChangedEventArgs(value, Value), nameof(ValueChanged));
 
+            if (GameSetting == null) return;
+
             try
             {
-                if (GameSetting != null)
+                GameOptionsMenu optionsMenu = Object.FindObjectOfType<GameOptionsMenu>();
+
+                if (optionsMenu == null) return;
+
+                for (int i = 0; i < optionsMenu.Children.Length; i++)
                 {
-                    //Object.FindObjectOfType<GameOptionsMenu>()?.Method_16(); // RefreshChildren();
-                    GameOptionsMenu optionsMenu = Object.FindObjectOfType<GameOptionsMenu>();
-                    for (int i = 0; i < optionsMenu.Children.Length; i++)
-                    {
-                        OptionBehaviour optionBehaviour = optionsMenu.Children[i];
-                        optionBehaviour.enabled = false;
-                        optionBehaviour.enabled = true;
-                    }
+                    OptionBehaviour optionBehaviour = optionsMenu.Children[i];
+                    optionBehaviour.enabled = false;
+                    optionBehaviour.enabled = true;
                 }
             }
             catch

@@ -15,9 +15,21 @@ using Object = UnityEngine.Object;
 
 namespace Essentials.UI
 {
+    /// <summary>
+    /// Gameplay button, made to mimic the behaviour of buttons such as the use and report buttons.
+    /// </summary>
     public partial class GameplayButton : IDisposable
     {
         protected static List<GameplayButton> Buttons = new List<GameplayButton>();
+
+#if S20201209
+        public const float EdgeOffsetX = 0.7F;
+#elif S20210305
+        public const float EdgeOffsetX = 0.8F;
+#endif
+        public const float EdgeOffsetY = 0.7F;
+        public const float OffsetX = 1.3F;
+        public const float OffsetY = 1.3F;
 
         /// <summary>
         /// The game's state for UI elements like buttons. Stored to change the visibility of custom buttons too.
@@ -38,13 +50,13 @@ namespace Essentials.UI
             Events.HudStateChanged += (sender, e) => HudVisible = e.Active;
         }
 
+        public int Index { get; private set; }
+
         protected KillButtonManager KillButtonManager;
 
         public virtual bool Exists { get { return GameStarted && PlayerControl.LocalPlayer?.Data != null && KillButtonManager; } }
 
-        protected Vector2 _positionOffset;
-        public Vector2 PositionOffset { get { return _positionOffset; } set { _positionOffset = value; PositionOffsetV3 = _positionOffset.ToVector3(); } }
-        protected Vector3 PositionOffsetV3;
+        public HudPosition Position { get; set; }
 
         /// <summary>
         /// Whether or not the button is shown.
@@ -80,8 +92,9 @@ namespace Essentials.UI
         /// </summary>
         public event EventHandler<EventArgs> Clicked;
 
-        protected Vector3? BasePosition;
-
+        /// <summary>
+        /// The button's sprite.
+        /// </summary>
         protected Sprite ButtonSprite;
 
         protected bool IsDisposed;
@@ -89,9 +102,14 @@ namespace Essentials.UI
         /// <summary>
         /// Call in Plugin.Load
         /// </summary>
-        public GameplayButton(Sprite sprite, Vector2 positionOffset)
+        /// <param name="sprite">The button's sprite, null for kill button</param>
+        public GameplayButton(Sprite sprite, HudPosition position)
         {
-            PositionOffset = positionOffset;
+            Index = Buttons.Count;
+
+            Position = position ?? throw new ArgumentNullException(nameof(position), "Position cannot be null.");
+
+            Position.Offset += new Vector2(EdgeOffsetX, EdgeOffsetY);
 
             Buttons.Add(this);
 
@@ -99,22 +117,24 @@ namespace Essentials.UI
 
             CreateButton();
 
-            Events.HudUpdate += HudUpdate;
+            Events.HudUpdated += HudUpdate;
         }
 
         /// <summary>
         /// Call in Plugin.Load
         /// </summary>
-        public GameplayButton(byte[] imageData, Vector2 positionOffset) :
-            this(CreateSprite(imageData ?? throw new ArgumentNullException(nameof(imageData), $"An image asset is required.")), positionOffset)
+        /// <param name="imageData">Encoded image data</param>
+        public GameplayButton(byte[] imageData, HudPosition position) :
+            this(CreateSprite(imageData ?? throw new ArgumentNullException(nameof(imageData), $"An image asset is required.")), position)
         {
         }
 
         /// <summary>
         /// Call in Plugin.Load
         /// </summary>
-        public GameplayButton(string imageEmbededResourcePath, Vector2 positionOffset) :
-            this(GetBytesFromEmbeddedResource(Assembly.GetCallingAssembly(), imageEmbededResourcePath), positionOffset)
+        /// <param name="imageEmbededResourcePath">Path to embedded resource containing an image</param>
+        public GameplayButton(string imageEmbededResourcePath, HudPosition position) :
+            this(GetBytesFromEmbeddedResource(Assembly.GetCallingAssembly(), imageEmbededResourcePath), position)
         {
         }
 
@@ -122,7 +142,7 @@ namespace Essentials.UI
         {
             if (IsDisposed)
             {
-                Events.HudUpdate -= HudUpdate;
+                Events.HudUpdated -= HudUpdate;
 
                 Buttons.Remove(this);
 
@@ -209,14 +229,14 @@ namespace Essentials.UI
             if (KillButtonManager || !HudManager.Instance?.KillButton) return;
 
             KillButtonManager = Object.Instantiate(HudManager.Instance.KillButton, HudManager.Instance.transform);
-
-            KillButtonManager.gameObject.SetActive(HudVisible && Visible);
-
-            KillButtonManager.renderer.enabled = HudVisible && Visible;
-            if (ButtonSprite) KillButtonManager.renderer.sprite = ButtonSprite;
+            KillButtonManager.name = $"{GetType().Name}_{Index}";
 
             KillButtonManager.TimerText.enabled = false;
             KillButtonManager.TimerText.gameObject.SetActive(false);
+
+            SetVisible(HudVisible && Visible);
+
+            if (ButtonSprite) KillButtonManager.renderer.sprite = ButtonSprite;
 
             PassiveButton button = KillButtonManager.GetComponent<PassiveButton>();
             button.OnClick.RemoveAllListeners();
@@ -264,6 +284,9 @@ namespace Essentials.UI
             OnUpdate?.SafeInvoke(this, EventArgs.Empty, nameof(OnUpdate)); // Implementing code can control visibility and appearance.
         }
 
+        /// <summary>
+        /// Updates the button's appearance and logic.
+        /// </summary>
         protected virtual void Update()
         {
             if (!Exists)
@@ -275,8 +298,6 @@ namespace Essentials.UI
                 return;
             }
 
-            UpdatePosition();
-
             if (ButtonSprite) KillButtonManager.renderer.sprite = ButtonSprite;
 
             RaiseOnUpdate();
@@ -286,31 +307,26 @@ namespace Essentials.UI
             SetVisible(HudVisible && Visible);
         }
 
-        protected virtual void UpdatePosition()
-        {
-            if (BasePosition == null && KillButtonManager.transform.localPosition.x > 0F)
-            {
-                Vector3 v = KillButtonManager.transform.localPosition;
-                v.x = -v.x;// - 1.3F;
-
-                BasePosition = v;
-            }
-
-            if (BasePosition.HasValue)
-            {
-                Vector3 vector = BasePosition.Value + PositionOffsetV3;
-
-                KillButtonManager.transform.localPosition = vector;
-            }
-        }
-
+        /// <summary>
+        /// Changes the button's visibility.
+        /// </summary>
         protected virtual void SetVisible(bool visible)
         {
+            if (visible) UpdatePosition();
+
             KillButtonManager.gameObject.SetActive(visible);
 
             KillButtonManager.renderer.enabled = visible;
             KillButtonManager.renderer.color = !Clickable ? Palette.DisabledColor : Palette.EnabledColor;
             KillButtonManager.renderer.material.SetFloat("_Desat", Clickable ? 0F : 1F);
+        }
+
+        /// <summary>
+        /// Updates the button's position.
+        /// </summary>
+        protected virtual void UpdatePosition()
+        {
+            KillButtonManager.transform.localPosition = Position.GetVector3(-9F);
         }
 
         protected virtual void Dispose(bool disposing)
@@ -323,8 +339,7 @@ namespace Essentials.UI
                     {
                         if (KillButtonManager)
                         {
-                            KillButtonManager.renderer.enabled = false;
-                            KillButtonManager.TimerText.enabled = false;
+                            SetVisible(false);
 
                             KillButtonManager.Destroy();
                         }

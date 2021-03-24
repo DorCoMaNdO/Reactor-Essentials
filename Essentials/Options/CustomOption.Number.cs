@@ -4,10 +4,16 @@ using UnityEngine;
 
 namespace Essentials.Options
 {
+    public interface INumberOption
+    {
+        public void Increase();
+        public void Decrease();
+    }
+
     /// <summary>
     /// A derivative of <see cref="CustomOption"/>, handling number options.
     /// </summary>
-    public class CustomNumberOption : CustomOption
+    public class CustomNumberOption : CustomOption, INumberOption
     {
         /// <summary>
         /// The config entry used to store this option's value.
@@ -95,7 +101,7 @@ namespace Essentials.Options
         /// <summary>
         /// Increases <see cref="CustomOption.Value"/> by <see cref="Increment"/> while it's lower or until it matches <see cref="Max"/>.
         /// </summary>
-        public void Increase()
+        public virtual void Increase()
         {
             SetValue(GetValue() + Increment);
         }
@@ -103,12 +109,12 @@ namespace Essentials.Options
         /// <summary>
         /// Decreases <see cref="CustomOption.Value"/> by <see cref="Increment"/> while it's higher or until it matches <see cref="Min"/>.
         /// </summary>
-        public void Decrease()
+        public virtual void Decrease()
         {
             SetValue(GetValue() - Increment);
         }
 
-        private void SetValue(float value, bool raiseEvents)
+        protected virtual void SetValue(float value, bool raiseEvents)
         {
             value = Mathf.Clamp(value, Min, Max);
 
@@ -119,25 +125,25 @@ namespace Essentials.Options
         /// Sets a new value
         /// </summary>
         /// <param name="value">The new value</param>
-        public void SetValue(float value)
+        public virtual void SetValue(float value)
         {
             SetValue(value, true);
         }
 
         /// <returns>The float-casted default value.</returns>
-        public float GetDefaultValue()
+        public virtual float GetDefaultValue()
         {
             return (float)DefaultValue;
         }
 
         /// <returns>The float-casted old value.</returns>
-        public float GetOldValue()
+        public virtual float GetOldValue()
         {
             return (float)OldValue;
         }
 
         /// <returns>The float-casted current value.</returns>
-        public float GetValue()
+        public virtual float GetValue()
         {
             return (float)Value;
         }

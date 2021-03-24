@@ -7,21 +7,43 @@ namespace Essentials
     [HarmonyPatch]
     public static partial class Events
     {
-        public static event EventHandler<EventArgs> HudUpdate;
+        public static event EventHandler<EventArgs> HudCreated;
+        public static event EventHandler<EventArgs> OnHudUpdate;
+        public static event EventHandler<EventArgs> HudUpdated;
         public static event EventHandler<HudStateChangedEventArgs> HudStateChanged;
+        public static event EventHandler<ResolutionChangedEventArgs> ResolutionChanged;
+        
+        [HarmonyPatch(typeof(HudManager), nameof(HudManager.Start))]
+        [HarmonyPostfix]
+        private static void HudManagerStart()
+        {
+            HudCreated?.SafeInvoke(HudManager.Instance, EventArgs.Empty, nameof(HudCreated));
+        }
 
         [HarmonyPatch(typeof(HudManager), nameof(HudManager.Update))]
-        [HarmonyPostfix]
-        private static void HudManagerUpdate(HudManager __instance)
+        private static class HudManagerUpdate
         {
-            HudUpdate?.SafeInvoke(__instance, EventArgs.Empty, nameof(HudUpdate));
+            private static void Prefix()
+            {
+                OnHudUpdate?.SafeInvoke(HudManager.Instance, EventArgs.Empty, nameof(OnHudUpdate));
+            }
+
+            private static void Postfix()
+            {
+                HudUpdated?.SafeInvoke(HudManager.Instance, EventArgs.Empty, nameof(HudUpdated));
+            }
         }
 
         [HarmonyPatch(typeof(HudManager), nameof(HudManager.SetHudActive))]
         [HarmonyPostfix]
-        private static void HudManagerSetHudActive(HudManager __instance, [HarmonyArgument(0)] bool isActive)
+        private static void HudManagerSetHudActive([HarmonyArgument(0)] bool isActive)
         {
-            HudStateChanged?.SafeInvoke(__instance, new HudStateChangedEventArgs(isActive), nameof(HudUpdate));
+            HudStateChanged?.SafeInvoke(HudManager.Instance, new HudStateChangedEventArgs(isActive), nameof(HudStateChanged));
+        }
+        
+        internal static void RaiseResolutionChanged(int oldPixelWidth, int oldPixelHeight, float oldWidth, float oldHeight)
+        {
+            ResolutionChanged?.SafeInvoke(HudManager.Instance, new ResolutionChangedEventArgs(oldPixelWidth, oldPixelHeight, oldWidth, oldHeight), nameof(ResolutionChanged));
         }
     }
 }

@@ -2,10 +2,17 @@
 
 namespace Essentials.Options
 {
+    public interface IStringOption
+    {
+        public void Increase();
+        public void Decrease();
+        public string GetText();
+    }
+
     /// <summary>
     /// A derivative of <see cref="CustomOption"/>, handling string options.
     /// </summary>
-    public class CustomStringOption : CustomOption
+    public class CustomStringOption : CustomOption, IStringOption
     {
         /// <summary>
         /// The config entry used to store this option's value.
@@ -61,7 +68,7 @@ namespace Essentials.Options
         /// <summary>
         /// Increases <see cref="CustomOption.Value"/> by 1 while it's lower than the length of <see cref="Values"/> or sets it back to 0 once the length is exceeded.
         /// </summary>
-        public void Increase()
+        public virtual void Increase()
         {
             int next = GetValue() + 1;
             if (next >= Values.Length) next = 0;
@@ -72,7 +79,7 @@ namespace Essentials.Options
         /// <summary>
         /// Decreases <see cref="CustomOption.Value"/> by 1 while it's higher than 0 or sets it back to the length of <see cref="Values"/>-1.
         /// </summary>
-        public void Decrease()
+        public virtual void Decrease()
         {
             int next = GetValue() - 1;
             if (next < 0) next = Values.Length - 1;
@@ -80,7 +87,7 @@ namespace Essentials.Options
             SetValue(next);
         }
 
-        private void SetValue(int value, bool raiseEvents)
+        protected virtual void SetValue(int value, bool raiseEvents)
         {
             if (value < 0 || value >= Values.Length) value = (int)DefaultValue;
 
@@ -91,37 +98,37 @@ namespace Essentials.Options
         /// Sets a new value
         /// </summary>
         /// <param name="value">The new value</param>
-        public void SetValue(int value)
+        public virtual void SetValue(int value)
         {
             SetValue(value, true);
         }
 
         /// <returns>The int-casted default value.</returns>
-        public int GetDefaultValue()
+        public virtual int GetDefaultValue()
         {
             return (int)DefaultValue;
         }
 
         /// <returns>The int-casted old value.</returns>
-        public int GetOldValue()
+        public virtual int GetOldValue()
         {
             return (int)OldValue;
         }
 
         /// <returns>The int-casted current value.</returns>
-        public int GetValue()
+        public virtual int GetValue()
         {
             return (int)Value;
         }
 
         /// <returns>The text at index <paramref name="value"/>.</returns>
-        public string GetText(int value)
+        public virtual string GetText(int value)
         {
             return Values[value];
         }
 
         /// <returns>The current text.</returns>
-        public string GetText()
+        public virtual string GetText()
         {
             return GetText(GetValue());
         }
