@@ -43,7 +43,7 @@ namespace Essentials.Options
                     continue;
                 }
 
-                if (option.Type == CustomOptionType.Toggle)
+                if (option.Type == CustomOptionType.Toggle && AmongUsClient.Instance?.AmHost == true)
                 {
                     if (toggleOption == null) continue;
 
@@ -67,9 +67,9 @@ namespace Essentials.Options
 
                     if (Debug) EssentialsPlugin.Logger.LogInfo($"Option \"{option.Name}\" was created");
                 }
-                else if (option.Type == CustomOptionType.String)
+                else if (option.Type == CustomOptionType.String || option.Type == CustomOptionType.Toggle && AmongUsClient.Instance?.AmHost != true)
                 {
-                    //if (option is CustomKeyValueOption)
+                    //if (option is IKeyValueOption)
                     //{
                     //    //if (kvOption == null) continue;
 
@@ -292,7 +292,8 @@ namespace Essentials.Options
             {
                 if (AmongUsClient.Instance?.AmHost != true || PlayerControl.AllPlayerControls.Count < 2 || !PlayerControl.LocalPlayer) return;
 
-                Rpc.Send(Options.Where(o => o.SendRpc).Select(o => ((string, CustomOptionType, object))o).ToArray());
+                //Rpc.Send(Options.Where(o => o.SendRpc).Select(o => ((string, CustomOptionType, object))o).ToArray());
+                foreach (CustomOption option in Options) if (option.SendRpc) Rpc.Instance.Send(option);
             }
         }
 
@@ -304,7 +305,7 @@ namespace Essentials.Options
         private static void UpdateScroller(object sender, EventArgs e)
         {
             HudManager hudManager = (HudManager)sender;
-        
+
             if (hudManager?.GameSettings?.transform == null) return;
 
             hudManager.GameSettings.scale = LobbyTextScale;

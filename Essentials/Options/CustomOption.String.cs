@@ -37,10 +37,10 @@ namespace Essentials.Options
 
             ValueChanged += (sender, args) =>
             {
-                if (GameSetting is StringOption && AmongUsClient.Instance?.AmHost == true && PlayerControl.LocalPlayer && ConfigEntry != null) ConfigEntry.Value = (int)Value;
+                if (GameSetting is StringOption && AmongUsClient.Instance?.AmHost == true && PlayerControl.LocalPlayer && ConfigEntry != null) ConfigEntry.Value = GetValue();
             };
 
-            ConfigEntry = saveValue ? EssentialsPlugin.Instance.Config.Bind(PluginID, ConfigID, (int)DefaultValue) : null;
+            ConfigEntry = saveValue ? EssentialsPlugin.Instance.Config.Bind(PluginID, ConfigID, GetDefaultValue()) : null;
             SetValue(ConfigEntry == null ? GetDefaultValue() : ConfigEntry.Value, false);
 
             StringFormat = (sender, value) => Values[(int)value];
@@ -89,7 +89,7 @@ namespace Essentials.Options
 
         protected virtual void SetValue(int value, bool raiseEvents)
         {
-            if (value < 0 || value >= Values.Length) value = (int)DefaultValue;
+            if (value < 0 || value >= Values.Length) value = GetDefaultValue();
 
             base.SetValue(value, raiseEvents);
         }
@@ -106,19 +106,19 @@ namespace Essentials.Options
         /// <returns>The int-casted default value.</returns>
         public virtual int GetDefaultValue()
         {
-            return (int)DefaultValue;
+            return GetDefaultValue<int>();
         }
 
         /// <returns>The int-casted old value.</returns>
         public virtual int GetOldValue()
         {
-            return (int)OldValue;
+            return GetOldValue<int>();
         }
 
         /// <returns>The int-casted current value.</returns>
         public virtual int GetValue()
         {
-            return (int)Value;
+            return GetValue<int>();
         }
 
         /// <returns>The text at index <paramref name="value"/>.</returns>

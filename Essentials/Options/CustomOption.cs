@@ -7,6 +7,7 @@ using Object = UnityEngine.Object;
 
 namespace Essentials.Options
 {
+    //[Serializable]
     public enum CustomOptionType
     {
         /// <summary>
@@ -236,12 +237,45 @@ namespace Essentials.Options
         }
 
         /// <summary>
-        /// Raises <see cref="ValueChanged"/> event when <see cref="Value"/> differs from <see cref="DefaultValue"/>.
+        /// Called when the option value changes, used to reflect the change visually with the <see cref="GameSetting"/> object.
         /// </summary>
-        [Obsolete("Use RaiseValueChanged", true)]
-        public void RaiseIfNonDefault()
+        protected virtual void UpdateGameOption()
         {
-            RaiseValueChanged();
+            try
+            {
+                if (GameSetting is ToggleOption toggle)
+                {
+                    if (Value is not bool newValue) return;
+
+                    toggle.oldValue = newValue;
+                    if (toggle.CheckMark != null) toggle.CheckMark.enabled = newValue;
+                }
+                else if (GameSetting is NumberOption number)
+                {
+#if S20201209
+                    if (Value is float newValue) number.Value = number.oldValue = newValue;
+#elif S20210305
+                    if (Value is float newValue) number.Value = number.Field_3 = newValue;
+#endif
+                    if (number.ValueText != null) number.ValueText.Text = GetFormattedValue();
+                }
+                else if (GameSetting is StringOption str)
+                {
+                    if (Value is int newValue) str.Value = str.oldValue = newValue;
+
+                    if (str.ValueText != null) str.ValueText.Text = GetFormattedValue();
+                }
+                else if (GameSetting is KeyValueOption kv)
+                {
+                    if (Value is int newValue) kv.Selected = kv.oldValue = newValue;
+
+                    if (kv.ValueText != null) kv.ValueText.Text = GetFormattedValue();
+                }
+            }
+            catch (Exception e)
+            {
+                EssentialsPlugin.Logger.LogWarning($"Failed to update game setting value for option \"{Name}\": {e}");
+            }
         }
 
         /// <summary>
@@ -302,47 +336,10 @@ namespace Essentials.Options
 
             Value = value;
 
-            if (SendRpc && GameSetting != null && AmongUsClient.Instance?.AmHost == true && PlayerControl.LocalPlayer) Rpc.Send(new (string, CustomOptionType, object)[] { this });
+            //if (SendRpc && GameSetting != null && AmongUsClient.Instance?.AmHost == true && PlayerControl.LocalPlayer) Rpc.Send(new (string, CustomOptionType, object)[] { this });
+            if (SendRpc && GameSetting != null && AmongUsClient.Instance?.AmHost == true && PlayerControl.LocalPlayer) Rpc.Instance.Send(this);
 
-            try
-            {
-                if (GameSetting is ToggleOption toggle)
-                {
-                    bool newValue = (bool)Value;
-
-                    toggle.oldValue = newValue;
-                    if (toggle.CheckMark != null) toggle.CheckMark.enabled = newValue;
-                }
-                else if (GameSetting is NumberOption number)
-                {
-                    float newValue = (float)Value;
-
-#if S20201209
-                    number.Value = number.oldValue = newValue;
-#elif S20210305
-                    number.Value = number.Field_3 = newValue;
-#endif
-                    number.ValueText.Text = GetFormattedValue();
-                }
-                else if (GameSetting is StringOption str)
-                {
-                    int newValue = (int)Value;
-
-                    str.Value = str.oldValue = newValue;
-                    str.ValueText.Text = GetFormattedValue();
-                }
-                else if (GameSetting is KeyValueOption kv)
-                {
-                    int newValue = (int)Value;
-
-                    kv.Selected = kv.oldValue = newValue;
-                    kv.ValueText.Text = GetFormattedValue();
-                }
-            }
-            catch (Exception e)
-            {
-                EssentialsPlugin.Logger.LogWarning($"Failed to update game setting value for option \"{Name}\": {e}");
-            }
+            UpdateGameOption();
 
             if (raiseEvents) ValueChanged?.SafeInvoke(this, ValueChangedEventArgs(value, Value), nameof(ValueChanged));
 
@@ -386,6 +383,26 @@ namespace Essentials.Options
         public T GetValue<T>()
         {
             return (T)Value;
+        }
+
+        /// <summary>
+        /// Gets the default option value casted to <typeparamref name="T"/>
+        /// </summary>
+        /// <typeparam name="T">The type to cast the value to</typeparam>
+        /// <returns>The casted default value.</returns>
+        public T GetDefaultValue<T>()
+        {
+            return (T)DefaultValue;
+        }
+
+        /// <summary>
+        /// Gets the old option value casted to <typeparamref name="T"/>
+        /// </summary>
+        /// <typeparam name="T">The type to cast the value to</typeparam>
+        /// <returns>The casted old value.</returns>
+        public T GetOldValue<T>()
+        {
+            return (T)OldValue;
         }
 
         /// <returns><see cref="Name"/> passed through <see cref="NameStringFormat"/>.</returns>

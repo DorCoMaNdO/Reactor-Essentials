@@ -30,7 +30,7 @@ namespace Essentials
             Harmony.PatchAll();
 
             RegisterInIl2CppAttribute.Register();
-            //RegisterCustomRpcAttribute.Register(this);
+            RegisterCustomRpcAttribute.Register(this);
 
             ReactorVersionShower.TextUpdated += (text) =>
             {

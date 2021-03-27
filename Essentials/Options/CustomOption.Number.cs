@@ -54,7 +54,7 @@ namespace Essentials.Options
         /// <param name="value">The initial/default value</param>
         /// <param name="min">The lowest value permitted, may be overriden if <paramref name="value"/> is lower</param>
         /// <param name="max">The highest value permitted, may be overriden if <paramref name="value"/> is higher</param>
-        /// <param name="increment">The increment or decrement steps when <see cref="CustomNumberOption.Increase"/> or <see cref="CustomNumberOption.Decrease"/> are called</param>
+        /// <param name="increment">The increment or decrement steps when <see cref="Increase"/> or <see cref="Decrease"/> are called</param>
         public CustomNumberOption(string id, string name, bool saveValue, float value, float min = 0.25F, float max = 5F, float increment = 0.25F) : base(id, name, saveValue, CustomOptionType.Number, value)
         {
             Min = Mathf.Min(value, min);
@@ -64,10 +64,10 @@ namespace Essentials.Options
 
             ValueChanged += (sender, args) =>
             {
-                if (GameSetting is NumberOption && AmongUsClient.Instance?.AmHost == true && PlayerControl.LocalPlayer && ConfigEntry != null) ConfigEntry.Value = (float)Value;
+                if (GameSetting is NumberOption && AmongUsClient.Instance?.AmHost == true && PlayerControl.LocalPlayer && ConfigEntry != null) ConfigEntry.Value = GetValue();
             };
 
-            ConfigEntry = saveValue ? EssentialsPlugin.Instance.Config.Bind(PluginID, ConfigID, (float)DefaultValue) : null;
+            ConfigEntry = saveValue ? EssentialsPlugin.Instance.Config.Bind(PluginID, ConfigID, GetDefaultValue()) : null;
             SetValue(ConfigEntry == null ? GetDefaultValue() : ConfigEntry.Value, false);
 
             StringFormat = (sender, value) => value.ToString();
@@ -133,19 +133,19 @@ namespace Essentials.Options
         /// <returns>The float-casted default value.</returns>
         public virtual float GetDefaultValue()
         {
-            return (float)DefaultValue;
+            return GetDefaultValue<float>();
         }
 
         /// <returns>The float-casted old value.</returns>
         public virtual float GetOldValue()
         {
-            return (float)OldValue;
+            return GetOldValue<float>();
         }
 
         /// <returns>The float-casted current value.</returns>
         public virtual float GetValue()
         {
-            return (float)Value;
+            return GetValue<float>();
         }
     }
 

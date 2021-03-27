@@ -12,7 +12,7 @@ namespace Essentials
         public static event EventHandler<EventArgs> HudUpdated;
         public static event EventHandler<HudStateChangedEventArgs> HudStateChanged;
         public static event EventHandler<ResolutionChangedEventArgs> ResolutionChanged;
-        
+
         [HarmonyPatch(typeof(HudManager), nameof(HudManager.Start))]
         [HarmonyPostfix]
         private static void HudManagerStart()

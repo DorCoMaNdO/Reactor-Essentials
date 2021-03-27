@@ -31,10 +31,10 @@ namespace Essentials.Options
         {
             ValueChanged += (sender, args) =>
             {
-                if (GameSetting is ToggleOption && AmongUsClient.Instance?.AmHost == true && PlayerControl.LocalPlayer && ConfigEntry != null) ConfigEntry.Value = (bool)Value;
+                if (GameSetting is ToggleOption && AmongUsClient.Instance?.AmHost == true && PlayerControl.LocalPlayer && ConfigEntry != null) ConfigEntry.Value = GetValue();
             };
 
-            ConfigEntry = saveValue ? EssentialsPlugin.Instance.Config.Bind(PluginID, ConfigID, (bool)DefaultValue) : null;
+            ConfigEntry = saveValue ? EssentialsPlugin.Instance.Config.Bind(PluginID, ConfigID, GetDefaultValue()) : null;
             SetValue(ConfigEntry == null ? GetDefaultValue() : ConfigEntry.Value, false);
 
             StringFormat = (sender, value) => ((bool)value) ? "On" : "Off";
@@ -52,10 +52,17 @@ namespace Essentials.Options
 
         protected override void GameOptionCreated(OptionBehaviour o)
         {
-            if (o is not ToggleOption toggle) return;
-
-            toggle.TitleText.Text = GetFormattedName();
-            toggle.CheckMark.enabled = toggle.oldValue = GetValue();
+            if (o is ToggleOption toggle)
+            {
+                toggle.TitleText.Text = GetFormattedName();
+                toggle.CheckMark.enabled = toggle.oldValue = GetValue();
+            }
+            else if (o is StringOption str) // Display settings in menu for non-host
+            {
+                str.TitleText.Text = GetFormattedName();
+                str.Value = str.oldValue = 0;
+                str.ValueText.Text = GetFormattedValue();
+            }
         }
 
         /// <summary>
@@ -83,19 +90,19 @@ namespace Essentials.Options
         /// <returns>The boolean-casted default value.</returns>
         public virtual bool GetDefaultValue()
         {
-            return (bool)DefaultValue;
+            return GetDefaultValue<bool>();
         }
 
         /// <returns>The boolean-casted old value.</returns>
         public virtual bool GetOldValue()
         {
-            return (bool)OldValue;
+            return GetOldValue<bool>();
         }
 
         /// <returns>The boolean-casted current value.</returns>
         public virtual bool GetValue()
         {
-            return (bool)Value;
+            return GetValue<bool>();
         }
     }
 
