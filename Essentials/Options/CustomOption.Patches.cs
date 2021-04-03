@@ -49,7 +49,12 @@ namespace Essentials.Options
 
                     ToggleOption toggle = Object.Instantiate(toggleOption, toggleOption.transform.parent);//.DontDestroy();
 
-                    option.OnGameOptionCreated(toggle);
+                    if (!option.OnGameOptionCreated(toggle))
+                    {
+                        toggle.Destroy();
+
+                        continue;
+                    }
 
                     options.Add(toggle);
 
@@ -61,7 +66,12 @@ namespace Essentials.Options
 
                     NumberOption number = Object.Instantiate(numberOption, numberOption.transform.parent);//.DontDestroy();
 
-                    option.OnGameOptionCreated(number);
+                    if (!option.OnGameOptionCreated(number))
+                    {
+                        number.Destroy();
+
+                        continue;
+                    }
 
                     options.Add(number);
 
@@ -94,7 +104,12 @@ namespace Essentials.Options
 
                     StringOption str = Object.Instantiate(stringOption, stringOption.transform.parent);//.DontDestroy();
 
-                    option.OnGameOptionCreated(str);
+                    if (!option.OnGameOptionCreated(str))
+                    {
+                        str.Destroy();
+
+                        continue;
+                    }
 
                     options.Add(str);
 
@@ -166,7 +181,7 @@ namespace Essentials.Options
             private static void Postfix(ref string __result)
             {
                 int firstNewline = __result.IndexOf('\n');
-                StringBuilder sb = new StringBuilder(ClearDefaultLobbyText ? __result.Substring(0, firstNewline + 1) : __result);
+                StringBuilder sb = new StringBuilder(ClearDefaultHudText ? __result.Substring(0, firstNewline + 1) : __result);
 
                 if (ShamelessPlug) sb.AppendLine("[FF1111FF]DorCoMaNdO on GitHub/Twitter/Twitch[]");
                 foreach (CustomOption option in Options) if (option.HudVisible) sb.AppendLine(option.ToString());
@@ -174,7 +189,7 @@ namespace Essentials.Options
                 __result = sb.ToString();
 
                 string insert = ":";
-                if (LobbyTextScroller && (HudManager.Instance?.GameSettings?.Height).GetValueOrDefault() + 0.02F > HudPosition.Height) insert = " (Scroll for more):";
+                if (HudTextScroller && (HudManager.Instance?.GameSettings?.Height).GetValueOrDefault() + 0.02F > HudPosition.Height) insert = " (Scroll for more):";
                 __result = __result.Insert(firstNewline, insert);
 
                 // Remove last newline (for the scroller to not overscroll one line)
@@ -293,7 +308,8 @@ namespace Essentials.Options
                 if (AmongUsClient.Instance?.AmHost != true || PlayerControl.AllPlayerControls.Count < 2 || !PlayerControl.LocalPlayer) return;
 
                 //Rpc.Send(Options.Where(o => o.SendRpc).Select(o => ((string, CustomOptionType, object))o).ToArray());
-                foreach (CustomOption option in Options) if (option.SendRpc) Rpc.Instance.Send(option);
+                foreach (CustomOption option in Options) if (option.SendRpc) Rpc.Instance.Send(option, true);
+                //Rpc.Instance.Send(Options.Where(o => o.SendRpc).Select(o => ((int, CustomOptionType, object))o).ToArray());
             }
         }
 
@@ -308,12 +324,12 @@ namespace Essentials.Options
 
             if (hudManager?.GameSettings?.transform == null) return;
 
-            hudManager.GameSettings.scale = LobbyTextScale;
+            hudManager.GameSettings.scale = HudTextScale;
 
             const float XOffset = 0.066666F, YOffset = 0.1F;
 
             // Scroller disabled
-            if (!LobbyTextScroller)
+            if (!HudTextScroller)
             {
                 // Remove scroller if disabled late
                 if (OptionsScroller != null)

@@ -1,41 +1,36 @@
 ﻿namespace Essentials.Options
 {
     /// <summary>
-    /// A derivative of <see cref="CustomOption"/>, handling option headers.
+    /// A derivative of <see cref="CustomOptionButton"/>, handling option headers.
     /// </summary>
-    public class CustomOptionHeader : CustomOption
+    public class CustomOptionHeader : CustomOptionButton
     {
-        public override bool SendRpc { get { return false; } }
-
         /// <summary>
         /// Adds an option header.
         /// </summary>
         /// <param name="title">The title of the header</param>
         /// <param name="menu">The header will be visible in the lobby options menu</param>
-        /// <param name="hud">The header will appear in the option list in the lobby</param>
-        public CustomOptionHeader(string title, bool menu = true, bool hud = true) : base(title, title, false, CustomOptionType.Toggle, false)
+        /// <param name="hud">The header will appear in the HUD (option list) in the lobby</param>
+        /// <param name="initialValue">The header's initial (client sided) value, can be used to hide/show other options</param>
+        public CustomOptionHeader(string title, bool menu = true, bool hud = true, bool initialValue = false) : base(title, menu, hud, initialValue)
         {
-            OnValueChanged += (sender, args) =>
-            {
-                args.Cancel = true;
-            };
-
-            ToStringFormat = (_, name, _) => name;
-
-            MenuVisible = menu;
-            HudVisible = hud;
         }
 
-        protected override void GameOptionCreated(OptionBehaviour o)
+        protected override bool GameOptionCreated(OptionBehaviour o)
         {
-            if (o is not ToggleOption toggle) return;
+            if (!base.GameOptionCreated(o)) return false;
 
-            toggle.TitleText.Text = GetFormattedName();
+            if (o is ToggleOption toggle) toggle.transform.FindChild("Background")?.gameObject?.SetActive(false);
 
-            toggle.CheckMark.enabled = toggle.oldValue = false;
+            return true;
+        }
 
-            toggle.transform.FindChild("Background")?.gameObject?.SetActive(false);
-            toggle.transform.FindChild("CheckBox")?.gameObject?.SetActive(false);
+        /// <summary>
+        /// Toggles the option value (called when the header is pressed).
+        /// </summary>
+        public override void Toggle()
+        {
+            base.Toggle();
         }
     }
 
@@ -46,10 +41,11 @@
         /// </summary>
         /// <param name="title">The title of the header</param>
         /// <param name="menu">The header will be visible in the lobby options menu</param>
-        /// <param name="hud">The header will appear in the option list in the lobby</param>
-        public static CustomOptionHeader AddHeader(string title, bool menu = true, bool hud = true)
+        /// <param name="hud">The header will appear in the HUD (option list) in the lobby</param>
+        /// <param name="initialValue">The header's initial (client sided) value, can be used to hide/show other options</param>
+        public static CustomOptionHeader AddHeader(string title, bool menu = true, bool hud = true, bool initialValue = false)
         {
-            return new CustomOptionHeader(title, menu, hud);
+            return new CustomOptionHeader(title, menu, hud, initialValue);
         }
     }
 }

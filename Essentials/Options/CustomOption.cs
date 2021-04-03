@@ -35,7 +35,7 @@ namespace Essentials.Options
         private static List<CustomOption> Options = new List<CustomOption>();
 
         /// <summary>
-        /// Enables or disables the credit string appended to the option list in the lobby.
+        /// Enables or disables the credit string appended to the HUD (option list) in the lobby.
         /// Please provide credit or reference elsewhere if you disable this.
         /// </summary>
         public static bool ShamelessPlug { get; set; } = true;
@@ -46,19 +46,19 @@ namespace Essentials.Options
         public static bool Debug { get; set; } = true;
 
         /// <summary>
-        /// The size of lobby options text, game default is 0.65F, Essentials default is 0.5F.
+        /// The size of HUD (lobby options) text, game default is 0.65F, Essentials default is 0.5F.
         /// </summary>
-        public static float LobbyTextScale { get; set; } = 0.5F;
+        public static float HudTextScale { get; set; } = 0.5F;
 
         /// <summary>
-        /// Enables or disables the lobby options text scroller.
+        /// Enables or disables the HUD (lobby options) text scroller.
         /// </summary>
-        public static bool LobbyTextScroller { get; set; } = true;
+        public static bool HudTextScroller { get; set; } = true;
 
         /// <summary>
-        /// Clear the game's default options list before listing custom options in the lobby.
+        /// Clear the game's default options list before listing custom options in the lobby HUD.
         /// </summary>
-        public static bool ClearDefaultLobbyText { get; set; } = false;
+        public static bool ClearDefaultHudText { get; set; } = false;
 
         /// <summary>
         /// The ID of the plugin that created the option.
@@ -118,32 +118,38 @@ namespace Essentials.Options
         public event EventHandler<OptionValueChangedEventArgs> ValueChanged;
 
         /// <summary>
-        /// The game object that represents the custom option in the lobby options list.
+        /// The game object that represents the custom option in the lobby options menu.
         /// </summary>
         public virtual OptionBehaviour GameSetting { get; protected set; }
 
+        public static Func<CustomOption, string, string> DefaultNameStringFormat = (_, name) => name;
         /// <summary>
         /// The string format reflecting the option name, result returned by <see cref="GetFormattedName"/>.
+        /// <para>Arguments: the sending custom option, option name.</para>
         /// </summary>
-        public virtual Func<CustomOption, string, string> NameStringFormat { get; set; }
+        public virtual Func<CustomOption, string, string> NameStringFormat { get; set; } = DefaultNameStringFormat;
 
+        public static Func<CustomOption, object, string> DefaultValueStringFormat = (_, value) => value.ToString();
         /// <summary>
         /// The string format reflecting the value, result returned by <see cref="GetFormattedValue"/>.
+        /// <para>Arguments: the sending custom option, current value.</para>
         /// </summary>
-        public virtual Func<CustomOption, object, string> StringFormat { get; set; }
+        public virtual Func<CustomOption, object, string> ValueStringFormat { get; set; } = DefaultValueStringFormat;
 
+        public static Func<CustomOption, string, string, string> DefaultHudStringFormat = (_, name, value) => $"{name}: {value}[]";
         /// <summary>
         /// The string format reflecting the option name and value, result returned by <see cref="ToString"/>.
-        /// Used when displaying the option in the lobby option list.
+        /// Used when displaying the option in the lobby HUD (option list).
+        /// <para>Arguments: the sending custom option, formatted name, formatted value.</para>
         /// </summary>
-        public virtual Func<CustomOption, string, string, string> ToStringFormat { get; set; }
+        public virtual Func<CustomOption, string, string, string> HudStringFormat { get; set; } = DefaultHudStringFormat;
 
         /// <summary>
         /// Affects whether the custom option will be visible in the lobby options menu.
         /// </summary>
         public virtual bool MenuVisible { get; set; } = true;
         /// <summary>
-        /// Affects whether the custom option will appear in the option list in the lobby.
+        /// Affects whether the custom option will appear in the HUD (option list) in the lobby.
         /// </summary>
         public virtual bool HudVisible { get; set; } = true;
 
@@ -207,9 +213,9 @@ namespace Essentials.Options
             return new OptionValueChangedEventArgs(value, Value);
         }
 
-        private void OnGameOptionCreated(OptionBehaviour o)
+        private bool OnGameOptionCreated(OptionBehaviour o)
         {
-            if (o == null) return;
+            if (o == null) return false;
 
             try
             {
@@ -217,7 +223,7 @@ namespace Essentials.Options
 
                 o.name = o.gameObject.name = ID;
 
-                GameOptionCreated(o);
+                if (!GameOptionCreated(o)) return false;
             }
             catch (Exception e)
             {
@@ -225,15 +231,17 @@ namespace Essentials.Options
             }
 
             GameSetting = o;
+
+            return true;
         }
 
         /// <summary>
         /// Called when the game object is (re)created for this option.
         /// </summary>
         /// <param name="o">The game object that was created for this option</param>
-        protected virtual void GameOptionCreated(OptionBehaviour o)
+        protected virtual bool GameOptionCreated(OptionBehaviour o)
         {
-            // throw unimplemented?
+            return true; // throw unimplemented?
         }
 
         /// <summary>
@@ -305,7 +313,7 @@ namespace Essentials.Options
         /// <param name="raiseEvents">Whether or not to raise events</param>
         protected virtual void SetValue(object value, bool raiseEvents)
         {
-            if (value?.GetType() != Value?.GetType() || Value == value) return; // Refuse value updates that don't match the option type
+            if (value?.GetType() != Value?.GetType() || Value == value) return; // Refuse value updates that don't match the option type.
 
             if (raiseEvents && OnValueChanged != null && AmongUsClient.Instance?.AmHost == true && PlayerControl.LocalPlayer)
             {
@@ -408,19 +416,19 @@ namespace Essentials.Options
         /// <returns><see cref="Name"/> passed through <see cref="NameStringFormat"/>.</returns>
         public string GetFormattedName()
         {
-            return NameStringFormat?.Invoke(this, Name) ?? Name.ToString();
+            return (NameStringFormat ?? DefaultNameStringFormat).Invoke(this, Name);
         }
 
-        /// <returns><see cref="Value"/> passed through <see cref="StringFormat"/>.</returns>
+        /// <returns><see cref="Value"/> passed through <see cref="ValueStringFormat"/>.</returns>
         public string GetFormattedValue()
         {
-            return StringFormat?.Invoke(this, Value) ?? Value.ToString();
+            return (ValueStringFormat ?? DefaultValueStringFormat).Invoke(this, Value);
         }
 
-        /// <returns><see cref="object.ToString()"/> or the return value of <see cref="StringFormat"/> when provided.</returns>
+        /// <returns><see cref="object.ToString()"/> or the return value of <see cref="ValueStringFormat"/> when provided.</returns>
         public override string ToString()
         {
-            return $"{ToStringFormat?.Invoke(this, GetFormattedName(), GetFormattedValue()) ?? $"{GetFormattedName()}: {GetFormattedValue()}"}[]";
+            return (HudStringFormat ?? DefaultHudStringFormat).Invoke(this, GetFormattedName(), GetFormattedValue());
         }
     }
 }

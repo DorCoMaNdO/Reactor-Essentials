@@ -1,4 +1,6 @@
 ﻿using BepInEx.Configuration;
+using System;
+using System.Collections.Generic;
 
 namespace Essentials.Options
 {
@@ -22,10 +24,11 @@ namespace Essentials.Options
         /// </remarks>
         public readonly ConfigEntry<int> ConfigEntry;
 
+        protected readonly string[] _values;
         /// <summary>
         /// The text values the option can present.
         /// </summary>
-        public readonly string[] Values;
+        public IReadOnlyCollection<string> Values { get { return Array.AsReadOnly(_values); } }
 
         /// <param name="id">The ID of the option, used to maintain the last value when <paramref name="saveValue"/> is true and to transmit the value between players</param>
         /// <param name="name">The name/title of the option</param>
@@ -33,7 +36,7 @@ namespace Essentials.Options
         /// <param name="values">The string values that may be displayed, initial/default value is index 0</param>
         public CustomStringOption(string id, string name, bool saveValue, string[] values) : base(id, name, saveValue, CustomOptionType.String, 0)
         {
-            Values = values;
+            _values = values;
 
             ValueChanged += (sender, args) =>
             {
@@ -43,7 +46,7 @@ namespace Essentials.Options
             ConfigEntry = saveValue ? EssentialsPlugin.Instance.Config.Bind(PluginID, ConfigID, GetDefaultValue()) : null;
             SetValue(ConfigEntry == null ? GetDefaultValue() : ConfigEntry.Value, false);
 
-            StringFormat = (sender, value) => Values[(int)value];
+            ValueStringFormat = (sender, value) => _values[(int)value];
         }
 
         protected override OptionOnValueChangedEventArgs OnValueChangedEventArgs(object value, object oldValue)
@@ -56,40 +59,38 @@ namespace Essentials.Options
             return new StringOptionValueChangedEventArgs(value, Value);
         }
 
-        protected override void GameOptionCreated(OptionBehaviour o)
+        protected override bool GameOptionCreated(OptionBehaviour o)
         {
-            if (o is not StringOption str) return;
+            if (o is not StringOption str) return false;
 
             str.TitleText.Text = GetFormattedName();
+
             str.Value = str.oldValue = GetValue();
+
             str.ValueText.Text = GetFormattedValue();
+
+            return true;
         }
 
         /// <summary>
-        /// Increases <see cref="CustomOption.Value"/> by 1 while it's lower than the length of <see cref="Values"/> or sets it back to 0 once the length is exceeded.
+        /// Increases <see cref="CustomOption.Value"/> by 1 while it's lower than the length of <see cref="_values"/> or sets it back to 0 once the length is exceeded.
         /// </summary>
         public virtual void Increase()
         {
-            int next = GetValue() + 1;
-            if (next >= Values.Length) next = 0;
-
-            SetValue(next);
+            SetValue((GetValue() + 1) % _values.Length);
         }
 
         /// <summary>
-        /// Decreases <see cref="CustomOption.Value"/> by 1 while it's higher than 0 or sets it back to the length of <see cref="Values"/>-1.
+        /// Decreases <see cref="CustomOption.Value"/> by 1 while it's higher than 0 or sets it back to the length of <see cref="_values"/>-1.
         /// </summary>
         public virtual void Decrease()
         {
-            int next = GetValue() - 1;
-            if (next < 0) next = Values.Length - 1;
-
-            SetValue(next);
+            SetValue((GetValue() + (_values.Length - 1)) % _values.Length);
         }
 
         protected virtual void SetValue(int value, bool raiseEvents)
         {
-            if (value < 0 || value >= Values.Length) value = GetDefaultValue();
+            if (value < 0 || value >= _values.Length) value = GetDefaultValue();
 
             base.SetValue(value, raiseEvents);
         }
@@ -124,7 +125,7 @@ namespace Essentials.Options
         /// <returns>The text at index <paramref name="value"/>.</returns>
         public virtual string GetText(int value)
         {
-            return Values[value];
+            return _values[value];
         }
 
         /// <returns>The current text.</returns>

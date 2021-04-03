@@ -1,6 +1,5 @@
 ﻿using Hazel;
 using Reactor;
-using System;
 using System.Linq;
 
 namespace Essentials.Options
@@ -34,7 +33,7 @@ namespace Essentials.Options
         }*/
 
         [RegisterCustomRpc]
-        private protected class Rpc : PlayerCustomRpc<EssentialsPlugin, (string, CustomOptionType, object)>
+        private protected class Rpc : PlayerCustomRpc<EssentialsPlugin, (int, CustomOptionType, object)>
         {
             public static Rpc Instance { get { return Rpc<Rpc>.Instance; } }
 
@@ -44,7 +43,7 @@ namespace Essentials.Options
 
             public override RpcLocalHandling LocalHandling { get { return RpcLocalHandling.None; } }
 
-            public override void Write(MessageWriter writer, (string, CustomOptionType, object) option)
+            public override void Write(MessageWriter writer, (int, CustomOptionType, object) option)
             {
                 writer.Write(option.Item1); // ID
                 writer.Write((int)option.Item2); // Type
@@ -53,9 +52,9 @@ namespace Essentials.Options
                 else if (option.Item2 == CustomOptionType.String) writer.Write((int)option.Item3);
             }
 
-            public override (string, CustomOptionType, object) Read(MessageReader reader)
+            public override (int, CustomOptionType, object) Read(MessageReader reader)
             {
-                string id = reader.ReadString();
+                int id = reader.ReadInt32();
                 CustomOptionType type = (CustomOptionType)reader.ReadInt32();
                 object value = null;
                 if (type == CustomOptionType.Toggle) value = reader.ReadBoolean();
@@ -65,34 +64,47 @@ namespace Essentials.Options
                 return (id, type, value);
             }
 
-            public override void Handle(PlayerControl sender, (string, CustomOptionType, object) option)
+            public override void Handle(PlayerControl sender, (int, CustomOptionType, object) option)
             {
                 if (sender?.Data == null) return;
 
-                string id = option.Item1;
+                int id = option.Item1;
                 CustomOptionType type = option.Item2;
-                CustomOption customOption = Options.FirstOrDefault(o => o.Type == type && o.ID.Equals(id, StringComparison.Ordinal));
+                CustomOption customOption = Options.FirstOrDefault(o => o.Type == type && o.GetHashCode() == id);
 
                 if (customOption == null)
                 {
-                    EssentialsPlugin.Logger.LogWarning($"Received option that could not be found: \"{id}\" of type {type}.");
+                    EssentialsPlugin.Logger.LogWarning($"Received option that could not be found, hashcode: {id}, type: {type}.");
 
                     return;
                 }
 
                 object value = option.Item3;
 
-                if (Debug) EssentialsPlugin.Logger.LogInfo($"\"{id}\" type: {type}, value: {value}, current value: {customOption.Value}");
+                if (Debug) EssentialsPlugin.Logger.LogInfo($"\"{customOption.ID}\" type: {type}, value: {value}, current value: {customOption.Value}");
 
                 customOption.SetValue(value, true);
 
-                if (Debug) EssentialsPlugin.Logger.LogInfo($"\"{id}\", set value: {customOption.Value}");
+                if (Debug) EssentialsPlugin.Logger.LogInfo($"\"{customOption.ID}\", set value: {customOption.Value}");
             }
         }
 
-        public static implicit operator (string ID, CustomOptionType Type, object Value)(CustomOption option)
+        public static implicit operator (int ID, CustomOptionType Type, object Value)(CustomOption option)
         {
-            return (option.ID, option.Type, option.GetValue<object>());
+            return (option.GetHashCode(), option.Type, option.GetValue<object>());
+        }
+
+        /*public static implicit operator (int ID, CustomOptionType Type, object Value)[](CustomOption option)
+        {
+            return new[] { ((int, CustomOptionType, object))option };
+        }*/
+
+        public override int GetHashCode()
+        {
+            unchecked
+            {
+                return PluginID.GetHashCode() ^ ConfigID.GetHashCode();// ^ Type.GetHashCode();
+            }
         }
     }
 }

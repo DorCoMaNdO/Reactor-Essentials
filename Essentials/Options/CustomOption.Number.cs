@@ -70,7 +70,7 @@ namespace Essentials.Options
             ConfigEntry = saveValue ? EssentialsPlugin.Instance.Config.Bind(PluginID, ConfigID, GetDefaultValue()) : null;
             SetValue(ConfigEntry == null ? GetDefaultValue() : ConfigEntry.Value, false);
 
-            StringFormat = (sender, value) => value.ToString();
+            ValueStringFormat = (sender, value) => value.ToString();
         }
 
         protected override OptionOnValueChangedEventArgs OnValueChangedEventArgs(object value, object oldValue)
@@ -83,9 +83,9 @@ namespace Essentials.Options
             return new NumberOptionValueChangedEventArgs(value, Value);
         }
 
-        protected override void GameOptionCreated(OptionBehaviour o)
+        protected override bool GameOptionCreated(OptionBehaviour o)
         {
-            if (o is not NumberOption number) return;
+            if (o is not NumberOption number) return false;
 
             number.TitleText.Text = GetFormattedName();
             number.ValidRange = new FloatRange(Min, Max);
@@ -96,6 +96,8 @@ namespace Essentials.Options
             number.Value = number.Field_3 = GetValue();
 #endif
             number.ValueText.Text = GetFormattedValue();
+
+            return true;
         }
 
         /// <summary>

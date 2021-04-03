@@ -37,7 +37,7 @@ namespace Essentials.Options
             ConfigEntry = saveValue ? EssentialsPlugin.Instance.Config.Bind(PluginID, ConfigID, GetDefaultValue()) : null;
             SetValue(ConfigEntry == null ? GetDefaultValue() : ConfigEntry.Value, false);
 
-            StringFormat = (sender, value) => ((bool)value) ? "On" : "Off";
+            ValueStringFormat = (sender, value) => ((bool)value) ? "On" : "Off";
         }
 
         protected override OptionOnValueChangedEventArgs OnValueChangedEventArgs(object value, object oldValue)
@@ -50,19 +50,28 @@ namespace Essentials.Options
             return new ToggleOptionValueChangedEventArgs(value, Value);
         }
 
-        protected override void GameOptionCreated(OptionBehaviour o)
+        protected override bool GameOptionCreated(OptionBehaviour o)
         {
             if (o is ToggleOption toggle)
             {
                 toggle.TitleText.Text = GetFormattedName();
+
                 toggle.CheckMark.enabled = toggle.oldValue = GetValue();
+
+                return true;
             }
-            else if (o is StringOption str) // Display settings in menu for non-host
+            else if (o is StringOption str) // Display options in menu for non-host
             {
                 str.TitleText.Text = GetFormattedName();
+
                 str.Value = str.oldValue = 0;
+
                 str.ValueText.Text = GetFormattedValue();
+
+                return true;
             }
+
+            return false;
         }
 
         /// <summary>

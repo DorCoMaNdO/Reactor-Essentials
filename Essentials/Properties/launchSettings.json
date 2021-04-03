@@ -2,11 +2,11 @@
   "profiles": {
     "2021.3.5s": {
       "commandName": "Executable",
-      "executablePath": "%AmongUs%\\Among Us.exe"
+      "executablePath": "%AmongUs_2021-3-5s%\\Among Us.exe"
     },
     "2020.12.9s": {
       "commandName": "Executable",
-      "executablePath": "%AmongUs_2020-12-9%\\Among Us.exe"
+      "executablePath": "%AmongUs_2020-12-9s%\\Among Us.exe"
     }
   }
 }
