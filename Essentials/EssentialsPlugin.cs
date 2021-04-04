@@ -40,5 +40,25 @@ namespace Essentials
 
             HudPosition.Load();
         }
+
+#if S202103313
+        /// <summary>
+        /// Corrects the issue where players are unable to move after meetings in 2021.3.31.3s, may interrupt controller support.
+        /// </summary>
+        public static bool PatchCanMove { get; set; } = true;
+
+        [HarmonyPatch(typeof(PlayerControl), nameof(PlayerControl.CanMove), MethodType.Getter)]
+        private static class PlayerControlCanMovePatch
+        {
+            public static bool Prefix(PlayerControl __instance, ref bool __result)
+            {
+                if (!PatchCanMove) return true;
+
+                __result = __instance.moveable && !Minigame.Instance && (!DestroyableSingleton<HudManager>.InstanceExists || !DestroyableSingleton<HudManager>.Instance.Chat.IsOpen && !DestroyableSingleton<HudManager>.Instance.KillOverlay.IsOpen && !DestroyableSingleton<HudManager>.Instance.GameMenu.IsOpen) /*&& (!ControllerManager.Instance || !ControllerManager.Instance.IsUiControllerActive)*/ && (!MapBehaviour.Instance || !MapBehaviour.Instance.IsOpenStopped) && !MeetingHud.Instance && !CustomPlayerMenu.Instance && !ExileController.Instance && !IntroCutscene.Instance;
+
+                return false;
+            }
+        }
+#endif
     }
 }

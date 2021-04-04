@@ -90,10 +90,12 @@ namespace Essentials.Options
             number.TitleText.Text = GetFormattedName();
             number.ValidRange = new FloatRange(Min, Max);
             number.Increment = Increment;
-#if S20201209
+#if S20201209 || S202103313
             number.Value = number.oldValue = GetValue();
 #elif S20210305
             number.Value = number.Field_3 = GetValue();
+#else
+#warning Implement
 #endif
             number.ValueText.Text = GetFormattedValue();
 

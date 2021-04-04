@@ -2,7 +2,7 @@ using Essentials.Extensions;
 using Reactor.Extensions;
 #if S20201209
 using Reactor.Unstrip;
-#elif S20210305
+#else
 using InnerNet;
 #endif
 using System;
@@ -24,8 +24,10 @@ namespace Essentials.UI
 
 #if S20201209
         public const float EdgeOffsetX = 0.7F;
-#elif S20210305
+#elif S20210305 || S202103313
         public const float EdgeOffsetX = 0.8F;
+#else
+#warning Implement
 #endif
         public const float EdgeOffsetY = 0.7F;
         public const float OffsetX = 1.3F;
@@ -317,7 +319,11 @@ namespace Essentials.UI
             KillButtonManager.gameObject.SetActive(visible);
 
             KillButtonManager.renderer.enabled = visible;
+#if S20201209 || S20210305
             KillButtonManager.renderer.color = !Clickable ? Palette.DisabledColor : Palette.EnabledColor;
+#else
+            KillButtonManager.renderer.color = !Clickable ? Palette.DisabledClear : Palette.EnabledColor;
+#endif
             KillButtonManager.renderer.material.SetFloat("_Desat", Clickable ? 0F : 1F);
         }
 

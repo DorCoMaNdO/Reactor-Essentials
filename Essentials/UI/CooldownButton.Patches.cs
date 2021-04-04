@@ -5,7 +5,11 @@ namespace Essentials.UI
     [HarmonyPatch]
     public partial class CooldownButton
     {
+#if S20201209 || S20210305
         [HarmonyPatch(typeof(HudManager.CoShowIntro__d), nameof(HudManager.CoShowIntro__d.MoveNext))]
+#else
+        [HarmonyPatch(typeof(HudManager._CoShowIntro_d__56), nameof(HudManager._CoShowIntro_d__56.MoveNext))]
+#endif
         [HarmonyPostfix]
         private static void HudManagerCoShowIntro()
         {
@@ -17,7 +21,7 @@ namespace Essentials.UI
         [HarmonyPostfix]
         private static void MeetingHudStart()
         {
-            foreach (CooldownButton button in CooldownButtons) if (button.MeetingsEndEffect) button.EndEffect(false); // End button effect early, TODO: Add property to pause effect duration instead.
+            foreach (CooldownButton button in CooldownButtons) if (button.MeetingsEndEffect) button.EndEffect(false); // End button effect early.
         }
 
         //[HarmonyPatch(typeof(ExileController.Animate__d), nameof(ExileController.Animate__d.MoveNext))]
@@ -25,13 +29,17 @@ namespace Essentials.UI
         [HarmonyPatch(typeof(ExileController), nameof(ExileController.Method_37))] //WrapUp 2020.12.9s
 #elif S20210305
         [HarmonyPatch(typeof(ExileController), nameof(ExileController.Method_24))] //WrapUp 2021.3.5s
+#elif S202103313
+        [HarmonyPatch(typeof(ExileController), nameof(ExileController.GALOAPAFIMJ))] //WrapUp 2021.3.31.3s
+#else
+#warning Implement
 #endif
         [HarmonyPostfix]
         private static void ExileControllerWrapUp()
         {
             if (!DestroyableSingleton<TutorialManager>.InstanceExists && ShipStatus.Instance.IsGameOverDueToDeath()) return;
 
-            foreach (CooldownButton button in CooldownButtons) if (button.CooldownAfterMeetings && !button.IsEffectActive) button.ApplyCooldown(); // Set button on cooldown after exile screen, TODO: Add property to disable.
+            foreach (CooldownButton button in CooldownButtons) if (button.CooldownAfterMeetings && !button.IsEffectActive) button.ApplyCooldown(); // Set button on cooldown after exile screen.
         }
 
         //game start/end to reset effects/cooldowns

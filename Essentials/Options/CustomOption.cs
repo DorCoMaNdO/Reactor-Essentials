@@ -260,10 +260,12 @@ namespace Essentials.Options
                 }
                 else if (GameSetting is NumberOption number)
                 {
-#if S20201209
+#if S20201209 || S202103313
                     if (Value is float newValue) number.Value = number.oldValue = newValue;
 #elif S20210305
                     if (Value is float newValue) number.Value = number.Field_3 = newValue;
+#else
+#warning Implement
 #endif
                     if (number.ValueText != null) number.ValueText.Text = GetFormattedValue();
                 }
