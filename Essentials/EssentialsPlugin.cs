@@ -12,7 +12,7 @@ namespace Essentials
     [BepInPlugin(Id)]
     [BepInProcess("Among Us.exe")]
     [BepInDependency(ReactorPlugin.Id, BepInDependency.DependencyFlags.HardDependency)]
-    [ReactorPluginSide(PluginSide.ClientOnly)]
+    [ReactorPluginSide(PluginSide.Both)]
     public partial class EssentialsPlugin : BasePlugin
     {
         public const string Id = "com.comando.essentials";

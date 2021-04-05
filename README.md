@@ -20,5 +20,5 @@ This guide assumes Reactor.OxygenFilter.MSBuild is being used.
 Newer versions of Essentials use configurations based on Among Us target version(s) and override the `AmongUs` environment variable as a result.
 Essentials depends on Reactor, follow installation steps 1 and 2 before proceeding.
 1. Add an environment variable for your targeted Among Us version(s), the environment variable needs to be prefixed with `AmongUs_` and then be followed by the client version, with dashes substituting dots, for example: `AmongUs_2020-12-9s` for version 2020.12.9s.
-2. Select the configuration for the targeted Among Us version (in Visual Studio, if building for more than one version, you can use Build -> Batch Build... from the toolbar and select all the target versions and then `Build`).
+2. Select the configuration for the targeted Among Us version (in Visual Studio, if building for more than one version, you can use `Build` -> `Batch Build...` from the toolbar and select all the target versions and then `Build`).
 3. The compiled binary will be copied to the `plugins` folder of your targeted Among Us version(s), as well as a `bin` folder in the solution's folder.

@@ -8,7 +8,7 @@ using Object = UnityEngine.Object;
 namespace Essentials.Options
 {
     //[Serializable]
-    public enum CustomOptionType
+    public enum CustomOptionType : byte
     {
         /// <summary>
         /// A checkmark toggle option.
@@ -43,7 +43,7 @@ namespace Essentials.Options
         /// <summary>
         /// Enables debug logging messages.
         /// </summary>
-        public static bool Debug { get; set; } = true;
+        public static bool Debug { get; set; } = false;
 
         /// <summary>
         /// The size of HUD (lobby options) text, game default is 0.65F, Essentials default is 0.5F.
@@ -105,6 +105,8 @@ namespace Essentials.Options
         /// The current value of the option.
         /// </summary>
         protected virtual object Value { get; set; }
+
+        protected readonly byte[] SHA1;
 
         /// <summary>
         /// An event raised before a value change occurs, can alter the final value or cancel the value change. Only raised for the lobby host.
@@ -189,6 +191,8 @@ namespace Essentials.Options
                 ID = $"{Id}_{++i}";
                 ConfigID = $"{id}_{i}";
             }
+
+            SHA1 = SHA1Helper.Create(ID);
 
             Options.Add(this);
         }

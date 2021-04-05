@@ -235,6 +235,29 @@ namespace Essentials.Options
             }
         }
 
+        private static bool OnFixedUpdate(OptionBehaviour opt)
+        {
+            return !Options.Any(option => option.GameSetting == opt);
+        }
+
+        [HarmonyPatch(typeof(NumberOption), nameof(NumberOption.FixedUpdate))]
+        private static class NumberOptionFixedUpdatePatch
+        {
+            private static bool Prefix(NumberOption __instance)
+            {
+                return OnFixedUpdate(__instance);
+            }
+        }
+
+        [HarmonyPatch(typeof(StringOption), nameof(StringOption.FixedUpdate))]
+        private static class StringOptionFixedUpdatePatch
+        {
+            private static bool Prefix(StringOption __instance)
+            {
+                return OnFixedUpdate(__instance);
+            }
+        }
+
         [HarmonyPatch(typeof(ToggleOption), nameof(ToggleOption.Toggle))]
         private class ToggleButtonPatch
         {

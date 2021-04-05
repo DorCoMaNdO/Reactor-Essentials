@@ -1,4 +1,5 @@
-﻿using Hazel;
+﻿using Essentials.Helpers;
+using Hazel;
 using Reactor;
 #if !S20201209 && !S20210305
 using Reactor.Networking;
@@ -41,7 +42,7 @@ namespace Essentials.Options
 #else
         [RegisterCustomRpc(0)]
 #endif
-        private protected class Rpc : PlayerCustomRpc<EssentialsPlugin, (string, CustomOptionType, object)>
+        private protected class Rpc : PlayerCustomRpc<EssentialsPlugin, (byte[], CustomOptionType, object)>
         {
             public static Rpc Instance { get { return Rpc<Rpc>.Instance; } }
 
@@ -55,38 +56,38 @@ namespace Essentials.Options
 
             public override RpcLocalHandling LocalHandling { get { return RpcLocalHandling.None; } }
 
-            public override void Write(MessageWriter writer, (string, CustomOptionType, object) option)
+            public override void Write(MessageWriter writer, (byte[], CustomOptionType, object) option)
             {
-                writer.Write(option.Item1); // ID
-                writer.Write((int)option.Item2); // Type
+                writer.Write(option.Item1); // SHA1
+                writer.Write((byte)option.Item2); // Type
                 if (option.Item2 == CustomOptionType.Toggle) writer.Write((bool)option.Item3);
                 else if (option.Item2 == CustomOptionType.Number) writer.Write((float)option.Item3);
                 else if (option.Item2 == CustomOptionType.String) writer.Write((int)option.Item3);
             }
 
-            public override (string, CustomOptionType, object) Read(MessageReader reader)
+            public override (byte[], CustomOptionType, object) Read(MessageReader reader)
             {
-                string id = reader.ReadString();
-                CustomOptionType type = (CustomOptionType)reader.ReadInt32();
+                byte[] sha1 = reader.ReadBytes(SHA1Helper.Length);
+                CustomOptionType type = (CustomOptionType)reader.ReadByte();
                 object value = null;
                 if (type == CustomOptionType.Toggle) value = reader.ReadBoolean();
                 else if (type == CustomOptionType.Number) value = reader.ReadSingle();
                 else if (type == CustomOptionType.String) value = reader.ReadInt32();
 
-                return (id, type, value);
+                return (sha1, type, value);
             }
 
-            public override void Handle(PlayerControl sender, (string, CustomOptionType, object) option)
+            public override void Handle(PlayerControl sender, (byte[], CustomOptionType, object) option)
             {
                 if (sender?.Data == null) return;
 
-                string id = option.Item1;
+                byte[] sha1 = option.Item1;
                 CustomOptionType type = option.Item2;
-                CustomOption customOption = Options.FirstOrDefault(o => o.Type == type && o.ID.Equals(id, StringComparison.Ordinal));
+                CustomOption customOption = Options.FirstOrDefault(o => o.Type == type && o.SHA1.SequenceEqual(sha1));
 
                 if (customOption == null)
                 {
-                    EssentialsPlugin.Logger.LogWarning($"Received option that could not be found, id: \"{id}\", type: {type}.");
+                    EssentialsPlugin.Logger.LogWarning($"Received option that could not be found, sha1: \"{string.Join("", sha1.Select(b => $"{b:X2}"))}\", type: {type}.");
 
                     return;
                 }
@@ -101,9 +102,9 @@ namespace Essentials.Options
             }
         }
 
-        public static implicit operator (string ID, CustomOptionType Type, object Value)(CustomOption option)
+        public static implicit operator (byte[] SHA1, CustomOptionType Type, object Value)(CustomOption option)
         {
-            return (option.ID, option.Type, option.GetValue<object>());
+            return (option.SHA1, option.Type, option.GetValue<object>());
         }
 
         /*public static implicit operator (int ID, CustomOptionType Type, object Value)(CustomOption option)

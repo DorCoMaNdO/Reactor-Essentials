@@ -26,12 +26,20 @@ namespace Essentials.Options
         /// <summary>
         /// A "modifier" string format, simply appending 'x' after the value.
         /// </summary>
+#if S20201209 || S20210305
         public static Func<CustomOption, object, string> ModifierStringFormat { get; } = (sender, value) => $"{value:0.0}x";
+#else
+        public static Func<CustomOption, object, string> ModifierStringFormat { get; } = (sender, value) => $"{value}x";
+#endif
 
         /// <summary>
         /// A "seconds" string format, simply appending 's' after the value.
         /// </summary>
+#if S20201209 || S20210305
         public static Func<CustomOption, object, string> SecondsStringFormat { get; } = (sender, value) => $"{value:0.0}s";
+#else
+        public static Func<CustomOption, object, string> SecondsStringFormat { get; } = (sender, value) => $"{value}s";
+#endif
 
         //public new float Value { get { return (float)base.Value; } protected set { base.Value = value; } }
 

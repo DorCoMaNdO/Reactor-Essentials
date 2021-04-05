@@ -16,6 +16,13 @@ namespace Essentials.Extensions
             return CompareName(a?.gameObject, b?.gameObject);
         }
 
+        /// <summary>
+        /// Attempt to cast IL2CPP object <paramref name="obj"/> to type <typeparamref name="T"/>
+        /// </summary>
+        /// <typeparam name="T">Type to cast to</typeparam>
+        /// <param name="obj">IL2CPP object to cast</param>
+        /// <param name="cast"><typeparamref name="T"/>-casted object</param>
+        /// <returns>Successful cast</returns>
         public static bool TryCastTo<T>(this Il2CppObjectBase obj, out T cast) where T : Il2CppObjectBase
         {
             cast = obj.TryCast<T>();
