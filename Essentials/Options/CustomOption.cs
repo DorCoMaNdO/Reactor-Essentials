@@ -3,6 +3,9 @@ using Essentials.Helpers;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+#if !S20201209 && !S20210305 && !S202103313
+using TMPro;
+#endif
 using Object = UnityEngine.Object;
 
 namespace Essentials.Options
@@ -43,12 +46,19 @@ namespace Essentials.Options
         /// <summary>
         /// Enables debug logging messages.
         /// </summary>
-        public static bool Debug { get; set; } = false;
+        public static bool Debug { get; set; } = true;
 
+#if S20201209 || S20210305 || S202103313
         /// <summary>
         /// The size of HUD (lobby options) text, game default is 0.65F, Essentials default is 0.5F.
         /// </summary>
         public static float HudTextScale { get; set; } = 0.5F;
+#else
+        /// <summary>
+        /// The size of HUD (lobby options) text, game default is 2, Essentials default is 1.4F.
+        /// </summary>
+        public static float HudTextFontSize { get; set; } = 1.4F;
+#endif
 
         /// <summary>
         /// Enables or disables the HUD (lobby options) text scroller.
@@ -122,7 +132,7 @@ namespace Essentials.Options
         /// <summary>
         /// The game object that represents the custom option in the lobby options menu.
         /// </summary>
-        public virtual OptionBehaviour GameSetting { get; protected set; }
+        public virtual OptionBehaviour GameObject { get; protected set; }
 
         public static Func<CustomOption, string, string> DefaultNameStringFormat = (_, name) => name;
         /// <summary>
@@ -138,7 +148,11 @@ namespace Essentials.Options
         /// </summary>
         public virtual Func<CustomOption, object, string> ValueStringFormat { get; set; } = DefaultValueStringFormat;
 
+#if S20201209 || S20210305 || S202103313
         public static Func<CustomOption, string, string, string> DefaultHudStringFormat = (_, name, value) => $"{name}: {value}[]";
+#else
+        public static Func<CustomOption, string, string, string> DefaultHudStringFormat = (_, name, value) => $"{name}: {value}";
+#endif
         /// <summary>
         /// The string format reflecting the option name and value, result returned by <see cref="ToString"/>.
         /// Used when displaying the option in the lobby HUD (option list).
@@ -217,7 +231,7 @@ namespace Essentials.Options
             return new OptionValueChangedEventArgs(value, Value);
         }
 
-        private bool OnGameOptionCreated(OptionBehaviour o)
+        private bool OnGameObjectCreated(OptionBehaviour o)
         {
             if (o == null) return false;
 
@@ -227,69 +241,124 @@ namespace Essentials.Options
 
                 o.name = o.gameObject.name = ID;
 
-                if (!GameOptionCreated(o)) return false;
+                GameObject = o;
+
+#if S20201209 || S20210305 || S202103313
+                TextRenderer title = null;
+#else
+                TextMeshPro title = null;
+#endif
+
+                if (GameObject is ToggleOption toggle) title = toggle.TitleText;
+                else if (GameObject is NumberOption number) title = number.TitleText;
+                else if (GameObject is StringOption str) title = str.TitleText;
+                else if (GameObject is KeyValueOption kv) title = kv.TitleText;
+
+#if S20201209 || S20210305 || S202103313
+                if (title != null) title.Text = GetFormattedName();
+#else
+                if (title != null) title.text = GetFormattedName();
+#endif
+
+                if (!GameObjectCreated(o))
+                {
+                    GameObject = null;
+
+                    return false;
+                }
+
+                return true;
             }
             catch (Exception e)
             {
-                EssentialsPlugin.Logger.LogWarning($"Exception in OnGameOptionCreated for option \"{Name}\" ({Type}): {e}");
+                EssentialsPlugin.Logger.LogWarning($"Exception in {nameof(OnGameObjectCreated)} for option \"{Name}\" ({Type}): {e}");
             }
 
-            GameSetting = o;
-
-            return true;
+            return false;
         }
 
         /// <summary>
         /// Called when the game object is (re)created for this option.
+        /// <para>Depends on <see cref="UpdateGameObject"/> by default.</para>
         /// </summary>
         /// <param name="o">The game object that was created for this option</param>
-        protected virtual bool GameOptionCreated(OptionBehaviour o)
+        /// <returns>Whether the object is valid, false to destroy.</returns>
+        protected virtual bool GameObjectCreated(OptionBehaviour o)
         {
-            return true; // throw unimplemented?
+            //EssentialsPlugin.Logger.LogWarning($"Base handler for {nameof(CustomOption)}.{nameof(GameObjectCreated)} was called, game object for option \"{Name}\" from plugin \"{PluginID}\" will be destroyed.");
+
+            //return false; // Destroy unhandled objects
+
+            return UpdateGameObject();
         }
 
         /// <summary>
-        /// Called when the option value changes, used to reflect the change visually with the <see cref="GameSetting"/> object.
+        /// Called when the <see cref="GameObject"/>'s components need to be updated to reflect the value visually.
         /// </summary>
-        protected virtual void UpdateGameOption()
+        /// <returns>Update success.</returns>
+        protected virtual bool UpdateGameObject()
         {
             try
             {
-                if (GameSetting is ToggleOption toggle)
+                if (GameObject is ToggleOption toggle)
                 {
-                    if (Value is not bool newValue) return;
+                    if (Value is not bool newValue) return false;
 
                     toggle.oldValue = newValue;
                     if (toggle.CheckMark != null) toggle.CheckMark.enabled = newValue;
+
+                    return true;
                 }
-                else if (GameSetting is NumberOption number)
+                else if (GameObject is NumberOption number)
                 {
-#if S20201209 || S202103313
-                    if (Value is float newValue) number.Value = number.oldValue = newValue;
-#elif S20210305
+#if S20210305
                     if (Value is float newValue) number.Value = number.Field_3 = newValue;
 #else
-#warning Implement
+                    if (Value is float newValue) number.Value = number.oldValue = newValue;
 #endif
+                    //else if (Value is bool newBoolValue) number.Value = number.oldValue = newBoolValue ? 1 : 0;
+
+#if S20201209 || S20210305 || S202103313
                     if (number.ValueText != null) number.ValueText.Text = GetFormattedValue();
+#else
+                    if (number.ValueText != null) number.ValueText.text = GetFormattedValue();
+#endif
+
+                    return true;
                 }
-                else if (GameSetting is StringOption str)
+                else if (GameObject is StringOption str)
                 {
                     if (Value is int newValue) str.Value = str.oldValue = newValue;
+                    else if (Value is bool newBoolValue) str.Value = str.oldValue = newBoolValue ? 1 : 0;
 
+#if S20201209 || S20210305 || S202103313
                     if (str.ValueText != null) str.ValueText.Text = GetFormattedValue();
+#else
+                    if (str.ValueText != null) str.ValueText.text = GetFormattedValue();
+#endif
+
+                    return true;
                 }
-                else if (GameSetting is KeyValueOption kv)
+                else if (GameObject is KeyValueOption kv)
                 {
                     if (Value is int newValue) kv.Selected = kv.oldValue = newValue;
+                    else if (Value is bool newBoolValue) kv.Selected = kv.oldValue = newBoolValue ? 1 : 0;
 
+#if S20201209 || S20210305 || S202103313
                     if (kv.ValueText != null) kv.ValueText.Text = GetFormattedValue();
+#else
+                    if (kv.ValueText != null) kv.ValueText.text = GetFormattedValue();
+#endif
+
+                    return true;
                 }
             }
             catch (Exception e)
             {
                 EssentialsPlugin.Logger.LogWarning($"Failed to update game setting value for option \"{Name}\": {e}");
             }
+
+            return false;
         }
 
         /// <summary>
@@ -351,14 +420,15 @@ namespace Essentials.Options
             Value = value;
 
             //if (SendRpc && GameSetting != null && AmongUsClient.Instance?.AmHost == true && PlayerControl.LocalPlayer) Rpc.Send(new (string, CustomOptionType, object)[] { this });
-            if (SendRpc && GameSetting != null && AmongUsClient.Instance?.AmHost == true && PlayerControl.LocalPlayer) Rpc.Instance.Send(this);
+            if (SendRpc && GameObject != null && AmongUsClient.Instance?.AmHost == true && PlayerControl.LocalPlayer) Rpc.Instance.Send(this);
 
-            UpdateGameOption();
+            UpdateGameObject();
 
             if (raiseEvents) ValueChanged?.SafeInvoke(this, ValueChangedEventArgs(value, Value), nameof(ValueChanged));
 
-            if (GameSetting == null) return;
+            if (GameObject == null) return; // Game object does not exist, menu is closed
 
+            // Refresh the value of all options in the menu, in case an option affects another.
             try
             {
                 GameOptionsMenu optionsMenu = Object.FindObjectOfType<GameOptionsMenu>();

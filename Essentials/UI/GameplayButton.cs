@@ -24,10 +24,8 @@ namespace Essentials.UI
 
 #if S20201209
         public const float EdgeOffsetX = 0.7F;
-#elif S20210305 || S202103313
-        public const float EdgeOffsetX = 0.8F;
 #else
-#warning Implement
+        public const float EdgeOffsetX = 0.8F;
 #endif
         public const float EdgeOffsetY = 0.7F;
         public const float OffsetX = 1.3F;

@@ -34,11 +34,11 @@ namespace Essentials.Options
             int i = 0;
             foreach (CustomOption option in Options)
             {
-                if (option.GameSetting != null)
+                if (option.GameObject)
                 {
-                    option.GameSetting.gameObject.SetActive(option.MenuVisible);
+                    option.GameObject.gameObject.SetActive(option.MenuVisible);
 
-                    options.Add(option.GameSetting);
+                    options.Add(option.GameObject);
 
                     continue;
                 }
@@ -49,16 +49,14 @@ namespace Essentials.Options
 
                     ToggleOption toggle = Object.Instantiate(toggleOption, toggleOption.transform.parent);//.DontDestroy();
 
-                    if (!option.OnGameOptionCreated(toggle))
+                    if (!option.OnGameObjectCreated(toggle))
                     {
-                        toggle.Destroy();
+                        toggle?.gameObject?.Destroy();
 
                         continue;
                     }
 
                     options.Add(toggle);
-
-                    if (Debug) EssentialsPlugin.Logger.LogInfo($"Option \"{option.Name}\" was created");
                 }
                 else if (option.Type == CustomOptionType.Number)
                 {
@@ -66,16 +64,14 @@ namespace Essentials.Options
 
                     NumberOption number = Object.Instantiate(numberOption, numberOption.transform.parent);//.DontDestroy();
 
-                    if (!option.OnGameOptionCreated(number))
+                    if (!option.OnGameObjectCreated(number))
                     {
-                        number.Destroy();
+                        number?.gameObject?.Destroy();
 
                         continue;
                     }
 
                     options.Add(number);
-
-                    if (Debug) EssentialsPlugin.Logger.LogInfo($"Option \"{option.Name}\" was created");
                 }
                 else if (option.Type == CustomOptionType.String || option.Type == CustomOptionType.Toggle && AmongUsClient.Instance?.AmHost != true)
                 {
@@ -96,31 +92,29 @@ namespace Essentials.Options
                     //    option.OnGameOptionCreated(kv);
 
                     //    options.Add(kv);
-
-                    //    if (Debug)EssentialsPlugin.Logger.LogInfo($"Option \"{option.Name}\" was created");
                     //}
 
                     if (stringOption == null) continue;
 
                     StringOption str = Object.Instantiate(stringOption, stringOption.transform.parent);//.DontDestroy();
 
-                    if (!option.OnGameOptionCreated(str))
+                    if (!option.OnGameObjectCreated(str))
                     {
-                        str.Destroy();
+                        str?.gameObject?.Destroy();
 
                         continue;
                     }
 
                     options.Add(str);
-
-                    if (Debug) EssentialsPlugin.Logger.LogInfo($"Option \"{option.Name}\" was created");
                 }
 
-                if (!option.GameSetting) continue;
+                if (!option.GameObject) continue;
 
-                if (option.MenuVisible) option.GameSetting.transform.localPosition = new Vector3(option.GameSetting.transform.localPosition.x, lowestY - ++i * 0.5F, option.GameSetting.transform.localPosition.z);
+                if (Debug) EssentialsPlugin.Logger.LogInfo($"Option \"{option.Name}\" was created");
 
-                option.GameSetting.gameObject.SetActive(option.MenuVisible);
+                if (option.MenuVisible) option.GameObject.transform.localPosition = new Vector3(option.GameObject.transform.localPosition.x, lowestY - ++i * 0.5F, option.GameObject.transform.localPosition.z);
+
+                option.GameObject.gameObject.SetActive(option.MenuVisible);
             }
 
             return options;
@@ -144,22 +138,23 @@ namespace Essentials.Options
         {
             if (Options.Count > 0)
             {
-                List<OptionBehaviour> options = __instance.Children.Take(defaultGameOptionsCount).ToList();
+                List<OptionBehaviour> options = (__instance.Children.Length >= defaultGameOptionsCount ? __instance.Children.Take(defaultGameOptionsCount) :
+                    __instance.Children.Where(option => !Options.Any(o => o.GameObject == option))).ToList();
 
                 float lowestY = options.Min(option => option.transform.localPosition.y);
                 int i = 0;
 
                 foreach (CustomOption option in Options)
                 {
-                    if (!option.GameSetting?.gameObject) continue;
+                    if (!option.GameObject?.gameObject) continue;
 
-                    option.GameSetting.gameObject.SetActive(option.MenuVisible);
+                    option.GameObject.gameObject.SetActive(option.MenuVisible);
 
                     if (option.MenuVisible)
                     {
-                        option.GameSetting.transform.localPosition = new Vector3(option.GameSetting.transform.localPosition.x, lowestY - ++i * 0.5F, option.GameSetting.transform.localPosition.z);
+                        option.GameObject.transform.localPosition = new Vector3(option.GameObject.transform.localPosition.x, lowestY - ++i * 0.5F, option.GameObject.transform.localPosition.z);
 
-                        options.Add(option.GameSetting);
+                        options.Add(option.GameObject);
                     }
                 }
 
@@ -183,13 +178,21 @@ namespace Essentials.Options
                 int firstNewline = __result.IndexOf('\n');
                 StringBuilder sb = new StringBuilder(ClearDefaultHudText ? __result.Substring(0, firstNewline + 1) : __result);
 
+#if S20201209 || S20210305 || S202103313
                 if (ShamelessPlug) sb.AppendLine("[FF1111FF]DorCoMaNdO on GitHub/Twitter/Twitch[]");
+#else
+                if (ShamelessPlug) sb.AppendLine("<color=#FF1111FF>DorCoMaNdO on GitHub/Twitter/Twitch</color>");
+#endif
                 foreach (CustomOption option in Options) if (option.HudVisible) sb.AppendLine(option.ToString());
 
                 __result = sb.ToString();
 
                 string insert = ":";
+#if S20201209 || S20210305 || S202103313
                 if (HudTextScroller && (HudManager.Instance?.GameSettings?.Height).GetValueOrDefault() + 0.02F > HudPosition.Height) insert = " (Scroll for more):";
+#else
+                if (HudTextScroller && (HudManager.Instance?.GameSettings?.renderedHeight).GetValueOrDefault() + 0.02F > HudPosition.Height) insert = " (Scroll for more):";
+#endif
                 __result = __result.Insert(firstNewline, insert);
 
                 // Remove last newline (for the scroller to not overscroll one line)
@@ -199,11 +202,11 @@ namespace Essentials.Options
 
         private static bool OnEnable(OptionBehaviour opt)
         {
-            CustomOption customOption = Options.FirstOrDefault(option => option.GameSetting == opt);
+            CustomOption customOption = Options.FirstOrDefault(option => option.GameObject == opt);
 
             if (customOption == null) return true;
 
-            customOption.OnGameOptionCreated(opt);
+            if (!customOption.OnGameObjectCreated(opt)) opt?.gameObject?.Destroy();
 
             return false;
         }
@@ -237,7 +240,7 @@ namespace Essentials.Options
 
         private static bool OnFixedUpdate(OptionBehaviour opt)
         {
-            return !Options.Any(option => option.GameSetting == opt);
+            return !Options.Any(option => option.GameObject == opt);
         }
 
         [HarmonyPatch(typeof(NumberOption), nameof(NumberOption.FixedUpdate))]
@@ -263,7 +266,7 @@ namespace Essentials.Options
         {
             public static bool Prefix(ToggleOption __instance)
             {
-                CustomOption option = Options.FirstOrDefault(option => option.GameSetting == __instance);
+                CustomOption option = Options.FirstOrDefault(option => option.GameObject == __instance);
 
                 if (option is IToggleOption toggle) toggle.Toggle();
 
@@ -276,7 +279,7 @@ namespace Essentials.Options
         {
             public static bool Prefix(NumberOption __instance)
             {
-                CustomOption option = Options.FirstOrDefault(option => option.GameSetting == __instance);
+                CustomOption option = Options.FirstOrDefault(option => option.GameObject == __instance);
 
                 if (option is INumberOption number) number.Increase();
 
@@ -289,7 +292,7 @@ namespace Essentials.Options
         {
             public static bool Prefix(NumberOption __instance)
             {
-                CustomOption option = Options.FirstOrDefault(option => option.GameSetting == __instance);
+                CustomOption option = Options.FirstOrDefault(option => option.GameObject == __instance);
 
                 if (option is INumberOption number) number.Decrease();
 
@@ -302,7 +305,7 @@ namespace Essentials.Options
         {
             public static bool Prefix(StringOption __instance)
             {
-                CustomOption option = Options.FirstOrDefault(option => option.GameSetting == __instance);
+                CustomOption option = Options.FirstOrDefault(option => option.GameObject == __instance);
 
                 if (option is IStringOption str) str.Increase();
 
@@ -315,7 +318,7 @@ namespace Essentials.Options
         {
             public static bool Prefix(StringOption __instance)
             {
-                CustomOption option = Options.FirstOrDefault(option => option.GameSetting == __instance);
+                CustomOption option = Options.FirstOrDefault(option => option.GameObject == __instance);
 
                 if (option is IStringOption str) str.Decrease();
 
@@ -347,7 +350,11 @@ namespace Essentials.Options
 
             if (hudManager?.GameSettings?.transform == null) return;
 
+#if S20201209 || S20210305 || S202103313
             hudManager.GameSettings.scale = HudTextScale;
+#else
+            hudManager.GameSettings.fontSize = HudTextFontSize;
+#endif
 
             const float XOffset = 0.066666F, YOffset = 0.1F;
 
@@ -374,7 +381,11 @@ namespace Essentials.Options
             if (!OptionsScroller.gameObject.active) return;
 
             // Scroll range
+#if S20201209 || S20210305 || S202103313
             OptionsScroller.YBounds = new FloatRange(HudPosition.TopLeft.y, Mathf.Max(HudPosition.TopLeft.y, hudManager.GameSettings.Height - HudPosition.TopLeft.y + 0.02F));
+#else
+            OptionsScroller.YBounds = new FloatRange(HudPosition.TopLeft.y, Mathf.Max(HudPosition.TopLeft.y, hudManager.GameSettings.renderedHeight - HudPosition.TopLeft.y + 0.02F));
+#endif
 
             float x = HudPosition.TopLeft.x + XOffset;
             OptionsScroller.XBounds = new FloatRange(x, x);

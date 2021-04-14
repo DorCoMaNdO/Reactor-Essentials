@@ -211,7 +211,11 @@ namespace Essentials.UI
 
             CooldownTime = EffectDuration;
 
+#if S20201209 || S20210305 || S202103313
             KillButtonManager.TimerText.Color = new Color(0F, 0.8F, 0F);
+#else
+            KillButtonManager.TimerText.color = new Color(0F, 0.8F, 0F);
+#endif
 
             if (!wasEffectActive) RaiseEffectStarted();
         }
@@ -226,7 +230,11 @@ namespace Essentials.UI
             {
                 IsEffectActive = false;
 
+#if S20201209 || S20210305 || S202103313
                 KillButtonManager.TimerText.Color = Palette.EnabledColor;
+#else
+                KillButtonManager.TimerText.color = Palette.EnabledColor;
+#endif
 
                 RaiseEffectEnded();
             }
@@ -310,7 +318,11 @@ namespace Essentials.UI
 
                 //KillButtonManager.isCoolingDown = IsCoolingDown;
 
+#if S20201209 || S20210305 || S202103313
                 KillButtonManager.TimerText.Text = Mathf.CeilToInt(CooldownTime).ToString();
+#else
+                KillButtonManager.TimerText.text = Mathf.CeilToInt(CooldownTime).ToString();
+#endif
             }
 
             KillButtonManager.TimerText.enabled = visible && IsCoolingDown;

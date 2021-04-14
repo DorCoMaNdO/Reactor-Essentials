@@ -34,8 +34,20 @@ namespace Essentials
 
             ReactorVersionShower.TextUpdated += (text) =>
             {
-                int index = text.Text.IndexOf('\n');
-                text.Text = text.Text.Insert(index == -1 ? text.Text.Length - 1 : index, "\nEssentials " + typeof(EssentialsPlugin).Assembly.GetCustomAttribute<AssemblyInformationalVersionAttribute>().InformationalVersion);
+#if S20201209 || S20210305 || S202103313
+                string txt = text.Text;
+#else
+                string txt = text.text;
+#endif
+
+                int index = txt.IndexOf('\n');
+                txt = txt.Insert(index == -1 ? txt.Length - 1 : index, "\nEssentials " + typeof(EssentialsPlugin).Assembly.GetCustomAttribute<AssemblyInformationalVersionAttribute>().InformationalVersion);
+
+#if S20201209 || S20210305 || S202103313
+                text.Text = txt;
+#else
+                text.text = txt;
+#endif
             };
 
             HudPosition.Load();

@@ -31,11 +31,11 @@ namespace Essentials.Options
         {
             ValueChanged += (sender, args) =>
             {
-                if (GameSetting is ToggleOption && AmongUsClient.Instance?.AmHost == true && PlayerControl.LocalPlayer && ConfigEntry != null) ConfigEntry.Value = GetValue();
+                if (ConfigEntry != null && GameObject is ToggleOption && AmongUsClient.Instance?.AmHost == true && PlayerControl.LocalPlayer) ConfigEntry.Value = GetValue();
             };
 
             ConfigEntry = saveValue ? EssentialsPlugin.Instance.Config.Bind(PluginID, ConfigID, GetDefaultValue()) : null;
-            SetValue(ConfigEntry == null ? GetDefaultValue() : ConfigEntry.Value, false);
+            SetValue(ConfigEntry?.Value ?? GetDefaultValue(), false);
 
             ValueStringFormat = (sender, value) => ((bool)value) ? "On" : "Off";
         }
@@ -48,30 +48,6 @@ namespace Essentials.Options
         protected override OptionValueChangedEventArgs ValueChangedEventArgs(object value, object oldValue)
         {
             return new ToggleOptionValueChangedEventArgs(value, Value);
-        }
-
-        protected override bool GameOptionCreated(OptionBehaviour o)
-        {
-            if (o is ToggleOption toggle)
-            {
-                toggle.TitleText.Text = GetFormattedName();
-
-                toggle.CheckMark.enabled = toggle.oldValue = GetValue();
-
-                return true;
-            }
-            else if (o is StringOption str) // Display options in menu for non-host
-            {
-                str.TitleText.Text = GetFormattedName();
-
-                str.Value = str.oldValue = 0;
-
-                str.ValueText.Text = GetFormattedValue();
-
-                return true;
-            }
-
-            return false;
         }
 
         /// <summary>

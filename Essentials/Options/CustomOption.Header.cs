@@ -16,13 +16,12 @@
         {
         }
 
-        protected override bool GameOptionCreated(OptionBehaviour o)
+        protected override bool GameObjectCreated(OptionBehaviour o)
         {
-            if (!base.GameOptionCreated(o)) return false;
+            o.transform.FindChild("CheckBox")?.gameObject?.SetActive(false);
+            o.transform.FindChild("Background")?.gameObject?.SetActive(false);
 
-            if (o is ToggleOption toggle) toggle.transform.FindChild("Background")?.gameObject?.SetActive(false);
-
-            return true;
+            return UpdateGameObject();
         }
 
         /// <summary>

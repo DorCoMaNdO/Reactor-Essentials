@@ -2,11 +2,11 @@
   <PropertyGroup>
     <TargetFramework>netstandard2.1</TargetFramework>
     <LangVersion>latest</LangVersion>
-    <Version>0.2.0-dev.10</Version>
+    <Version>0.2.0-dev</Version>
 
     <Description>Among Us modding essentials</Description>
     <Authors>CoMaNdO</Authors>
-    <Configurations>S20201209;S20210305;S202103313</Configurations>
+    <Configurations>S20201209;S20210305;S202103313;S20210412</Configurations>
 
     <Optimize>false</Optimize>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
@@ -14,21 +14,23 @@
   </PropertyGroup>
 
   <PropertyGroup Condition="'$(Configuration)'=='S20201209'">
-    <AmongUs>$(AmongUs_2020-12-9s)</AmongUs>
     <Mappings>NuclearPowered/Mappings:0.1.3</Mappings>
     <GameVersion>2020.12.9s</GameVersion>
   </PropertyGroup>
 
   <PropertyGroup Condition="'$(Configuration)'=='S20210305'">
-    <AmongUs>$(AmongUs_2021-3-5s)</AmongUs>
     <Mappings>NuclearPowered/Mappings:0.2.0</Mappings>
     <GameVersion>2021.3.5s</GameVersion>
   </PropertyGroup>
 
   <PropertyGroup Condition="'$(Configuration)'=='S202103313'">
-    <AmongUs>$(AmongUs_2021-3-31-3s)</AmongUs>
     <Mappings>NuclearPowered/Mappings:0.3.0</Mappings>
     <GameVersion>2021.3.31.3s</GameVersion>
+  </PropertyGroup>
+
+  <PropertyGroup Condition="'$(Configuration)'=='S20210412'">
+    <Mappings>NuclearPowered/Mappings:0.4.0</Mappings>
+    <GameVersion>2021.4.12s</GameVersion>
   </PropertyGroup>
 
   <PropertyGroup Condition="$(Configuration.StartsWith('S'))">
@@ -37,6 +39,10 @@
 
   <PropertyGroup Condition="$(Configuration.StartsWith('I'))">
     <DefineConstants>$(DefineConstants);ITCH</DefineConstants>
+  </PropertyGroup>
+
+  <PropertyGroup Condition="Exists('$(AmongUsMods)')">
+    <AmongUs>$(AmongUsMods)\$(GameVersion)</AmongUs>
   </PropertyGroup>
 
   <ItemGroup>

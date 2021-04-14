@@ -72,11 +72,11 @@ namespace Essentials.Options
 
             ValueChanged += (sender, args) =>
             {
-                if (GameSetting is NumberOption && AmongUsClient.Instance?.AmHost == true && PlayerControl.LocalPlayer && ConfigEntry != null) ConfigEntry.Value = GetValue();
+                if (ConfigEntry != null && GameObject is NumberOption && AmongUsClient.Instance?.AmHost == true && PlayerControl.LocalPlayer) ConfigEntry.Value = GetValue();
             };
 
             ConfigEntry = saveValue ? EssentialsPlugin.Instance.Config.Bind(PluginID, ConfigID, GetDefaultValue()) : null;
-            SetValue(ConfigEntry == null ? GetDefaultValue() : ConfigEntry.Value, false);
+            SetValue(ConfigEntry?.Value ?? GetDefaultValue(), false);
 
             ValueStringFormat = (sender, value) => value.ToString();
         }
@@ -91,23 +91,14 @@ namespace Essentials.Options
             return new NumberOptionValueChangedEventArgs(value, Value);
         }
 
-        protected override bool GameOptionCreated(OptionBehaviour o)
+        protected override bool GameObjectCreated(OptionBehaviour o)
         {
             if (o is not NumberOption number) return false;
 
-            number.TitleText.Text = GetFormattedName();
             number.ValidRange = new FloatRange(Min, Max);
             number.Increment = Increment;
-#if S20201209 || S202103313
-            number.Value = number.oldValue = GetValue();
-#elif S20210305
-            number.Value = number.Field_3 = GetValue();
-#else
-#warning Implement
-#endif
-            number.ValueText.Text = GetFormattedValue();
 
-            return true;
+            return UpdateGameObject();
         }
 
         /// <summary>

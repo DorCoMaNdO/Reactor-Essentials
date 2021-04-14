@@ -7,8 +7,10 @@ namespace Essentials.UI
     {
 #if S20201209 || S20210305
         [HarmonyPatch(typeof(HudManager.CoShowIntro__d), nameof(HudManager.CoShowIntro__d.MoveNext))]
-#else
+#elif S202103313
         [HarmonyPatch(typeof(HudManager._CoShowIntro_d__56), nameof(HudManager._CoShowIntro_d__56.MoveNext))]
+#else
+        [HarmonyPatch(typeof(HudManager.Nested_5), nameof(HudManager.Nested_5.MoveNext))]
 #endif
         [HarmonyPostfix]
         private static void HudManagerCoShowIntro()
@@ -32,7 +34,7 @@ namespace Essentials.UI
 #elif S202103313
         [HarmonyPatch(typeof(ExileController), nameof(ExileController.GALOAPAFIMJ))] //WrapUp 2021.3.31.3s
 #else
-#warning Implement
+        [HarmonyPatch(typeof(ExileController), nameof(ExileController.WrapUp))]
 #endif
         [HarmonyPostfix]
         private static void ExileControllerWrapUp()

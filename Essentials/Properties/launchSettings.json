@@ -2,15 +2,19 @@
   "profiles": {
     "2020.12.9s": {
       "commandName": "Executable",
-      "executablePath": "%AmongUs_2020-12-9s%\\Among Us.exe"
+      "executablePath": "%AmongUsMods%\\2020.12.9s\\Among Us.exe"
     },
     "2021.3.5s": {
       "commandName": "Executable",
-      "executablePath": "%AmongUs_2021-3-5s%\\Among Us.exe"
+      "executablePath": "%AmongUsMods%\\2021.3.5s\\Among Us.exe"
     },
     "2021.3.31.3s": {
       "commandName": "Executable",
-      "executablePath": "%AmongUs_2021-3-31-3s%\\Among Us.exe"
+      "executablePath": "%AmongUsMods%\\2021.3.31.3s\\Among Us.exe"
+    },
+    "2021.4.12s": {
+      "commandName": "Executable",
+      "executablePath": "%AmongUsMods%\\2021.4.12s\\Among Us.exe"
     }
   }
 }

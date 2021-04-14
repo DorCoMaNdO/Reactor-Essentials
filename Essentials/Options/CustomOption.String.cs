@@ -40,11 +40,11 @@ namespace Essentials.Options
 
             ValueChanged += (sender, args) =>
             {
-                if (GameSetting is StringOption && AmongUsClient.Instance?.AmHost == true && PlayerControl.LocalPlayer && ConfigEntry != null) ConfigEntry.Value = GetValue();
+                if (ConfigEntry != null && GameObject is StringOption && AmongUsClient.Instance?.AmHost == true && PlayerControl.LocalPlayer) ConfigEntry.Value = GetValue();
             };
 
             ConfigEntry = saveValue ? EssentialsPlugin.Instance.Config.Bind(PluginID, ConfigID, GetDefaultValue()) : null;
-            SetValue(ConfigEntry == null ? GetDefaultValue() : ConfigEntry.Value, false);
+            SetValue(ConfigEntry?.Value ?? GetDefaultValue(), false);
 
             ValueStringFormat = (sender, value) => _values[(int)value];
         }
@@ -57,19 +57,6 @@ namespace Essentials.Options
         protected override OptionValueChangedEventArgs ValueChangedEventArgs(object value, object oldValue)
         {
             return new StringOptionValueChangedEventArgs(value, Value);
-        }
-
-        protected override bool GameOptionCreated(OptionBehaviour o)
-        {
-            if (o is not StringOption str) return false;
-
-            str.TitleText.Text = GetFormattedName();
-
-            str.Value = str.oldValue = GetValue();
-
-            str.ValueText.Text = GetFormattedValue();
-
-            return true;
         }
 
         /// <summary>

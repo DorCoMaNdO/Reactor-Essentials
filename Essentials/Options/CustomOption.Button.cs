@@ -1,7 +1,4 @@
-﻿using Essentials.Extensions;
-using System;
-
-namespace Essentials.Options
+﻿namespace Essentials.Options
 {
     /// <summary>
     /// A derivative of <see cref="CustomOption"/>, handling "buttons" in the options menu.
@@ -20,35 +17,19 @@ namespace Essentials.Options
         public CustomOptionButton(string title, bool menu = true, bool hud = false, bool initialValue = false) : base(title, title, false, CustomOptionType.Toggle, initialValue)
         {
             HudStringFormat = (_, name, _) => name;
+            ValueStringFormat = (_, _) => string.Empty;
 
             MenuVisible = menu;
             HudVisible = hud;
         }
 
-        protected override bool GameOptionCreated(OptionBehaviour o)
+        protected override bool GameObjectCreated(OptionBehaviour o)
         {
-            if (o is ToggleOption toggle)
-            {
-                toggle.TitleText.Text = GetFormattedName();
+            if (AmongUsClient.Instance?.AmHost != true || o is not ToggleOption toggle) return false;
 
-                toggle.CheckMark.enabled = toggle.oldValue = false;
+            toggle.transform.FindChild("CheckBox")?.gameObject?.SetActive(false);
 
-                toggle.transform.FindChild("CheckBox")?.gameObject?.SetActive(false);
-
-                return true;
-            }
-            else if (o is StringOption str) // Display options in menu for non-host
-            {
-                str.TitleText.Text = GetFormattedName();
-
-                str.Value = str.oldValue = 0;
-
-                str.ValueText.Text = GetFormattedValue();
-
-                return true;
-            }
-
-            return false;
+            return UpdateGameObject();
         }
 
         /// <summary>
