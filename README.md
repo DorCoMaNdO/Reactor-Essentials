@@ -23,7 +23,7 @@ Essentials depends on Reactor, follow installation steps 1 and 2 before proceedi
 
 ### Building for a single Among Us version
 1. [Set up the `AmongUs` environment variable](https://docs.reactor.gg/docs/basic/install_netsdk_example_template#setup-among-us-environment-variable)
-2. Select and build the project configuration targeting your target version, `dotnet build -c CONFIGURATION` where `CONFIGURATION` is the configuration name (ex: `S20210412`), may be required due to a Mono.Cecil issue present in Reactor.OxygenFilter.MSBuild.
+2. Select and build the project configuration targeting your target version, `dotnet build -c CONFIGURATION` (where `CONFIGURATION` is the configuration name, ex: `S20210412`), may be required due to a Mono.Cecil issue present in Reactor.OxygenFilter.MSBuild.
 3. The compiled binary will be copied to the `plugins` folder of your targeted Among Us version, as well as a `bin` folder in the solution's folder.
 
 ### Building for multiple Among Us versions
