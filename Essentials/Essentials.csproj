@@ -79,7 +79,7 @@
   </Target>
 
   <Target Name="PostBuild" AfterTargets="PostBuildEvent" Condition="$(DefineConstants.Contains(UNOBFUSCATED))">
-    <Exec Command="copy /Y &quot;$(OutputPath)$(AssemblyName).dll&quot; &quot;$(AmongUs)/BepInEx/plugins/$(AssemblyName)-$(GameVersion).dll&quot;" />
-    <Exec Command="copy /Y &quot;$(OutputPath)$(AssemblyName).dll&quot; &quot;$(SolutionDir)bin/$(AssemblyName)-$(GameVersion).dll&quot;" />
+    <Copy SourceFiles="$(OutputPath)$(AssemblyName).dll" DestinationFiles="$(AmongUs)/BepInEx/plugins/$(AssemblyName)-$(GameVersion).dll" />
+    <Copy SourceFiles="$(OutputPath)$(AssemblyName).dll" DestinationFiles="$(SolutionDir)bin/$(AssemblyName)-$(GameVersion).dll" />
   </Target>
 </Project>
