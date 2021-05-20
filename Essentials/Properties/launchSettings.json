@@ -15,6 +15,10 @@
     "2021.4.12s": {
       "commandName": "Executable",
       "executablePath": "%AmongUsMods%\\2021.4.12s\\Among Us.exe"
+    },
+    "2021.5.10s": {
+      "commandName": "Executable",
+      "executablePath": "%AmongUsMods%\\2021.5.10s\\Among Us.exe"
     }
   }
 }

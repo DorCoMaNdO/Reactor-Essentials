@@ -1,6 +1,8 @@
 # Essentials
 Essentials is a modding library for Among Us with APIs to speed up and ease development, with the goal of improving mod compatibility.
 
+Currently, the key features of Essentials are custom options and gameplay buttons, with more planned in the future to improve mod compatibility.
+
 ## Installation
 **NOTE:** At the moment, official builds are only compiled for the Steam client.
 1. Install [BepInEx](https://docs.reactor.gg/docs/basic/install_bepinex).
@@ -16,6 +18,7 @@ This guide assumes Reactor.OxygenFilter.MSBuild is being used.
 2. Add or locate an `ItemGroup` tag.
 3. Add the following line: `<Deobfuscate Include="$(AmongUs)\BepInEx\plugins\Essentials-$(GameVersion).dll" />`
 4. If using Visual Studio, building your project once with `dotnet build` may be required due to a Mono.Cecil issue present in Reactor.OxygenFilter.MSBuild.
+5. While a guide or demo is not currently available, most types and methods contain documentation, the current key features are under the `Essentials.Options` and `Essentials.UI` namespaces.
 
 ## Building Essentials
 Newer versions of Essentials use configurations based on Among Us target version(s) and override the `AmongUs` environment variable as a result.

@@ -6,7 +6,7 @@
 
     <Description>Among Us modding essentials</Description>
     <Authors>CoMaNdO</Authors>
-    <Configurations>S20201209;S20210305;S202103313;S20210412</Configurations>
+    <Configurations>S20201209;S20210305;S202103313;S20210412;S20210510</Configurations>
 
     <Optimize>false</Optimize>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
@@ -33,6 +33,11 @@
     <GameVersion>2021.4.12s</GameVersion>
   </PropertyGroup>
 
+  <PropertyGroup Condition="'$(Configuration)'=='S20210510'">
+    <GameVersion>2021.5.10s</GameVersion>
+    <DefineConstants>$(DefineConstants);UNOBFUSCATED</DefineConstants>
+  </PropertyGroup>
+
   <PropertyGroup Condition="$(Configuration.StartsWith('S'))">
     <DefineConstants>$(DefineConstants);STEAM</DefineConstants>
   </PropertyGroup>
@@ -45,14 +50,36 @@
     <AmongUs>$(AmongUsMods)\$(GameVersion)</AmongUs>
   </PropertyGroup>
 
-  <ItemGroup>
-    <Deobfuscate Include="$(AmongUs)\BepInEx\plugins\Reactor-$(GameVersion).dll" />
+  <Choose>
+    <When Condition="!$(DefineConstants.Contains(UNOBFUSCATED))">
+      <ItemGroup>
+        <Deobfuscate Include="$(AmongUs)\BepInEx\plugins\Reactor-$(GameVersion).dll" />
+        
+        <PackageReference Include="Reactor.OxygenFilter.MSBuild" Version="0.3.0" />
+      </ItemGroup>
+    </When>
+    <When Condition="$(DefineConstants.Contains(UNOBFUSCATED))">
+      <ItemGroup>
+        <Reference Include="$(AmongUs)\BepInEx\core\*.dll">
+          <Private>false</Private>
+        </Reference>
+        <Reference Include="$(AmongUs)\BepInEx\unhollowed\*.dll">
+          <Private>false</Private>
+        </Reference>
+        <Reference Remove="$(AmongUs)\BepInEx\unhollowed\netstandard.dll;$(AmongUs)\BepInEx\unhollowed\Newtonsoft.Json.dll" />
+        
+        <Reference Include="$(AmongUs)\BepInEx\plugins\Reactor-$(GameVersion).dll" />
+      </ItemGroup>
+    </When>
+  </Choose>
 
-    <PackageReference Include="Reactor.OxygenFilter.MSBuild" Version="0.3.0" />
-  </ItemGroup>
-
-  <Target Name="Copy" AfterTargets="Reobfuscate">
+  <Target Name="Copy" AfterTargets="Reobfuscate" Condition="!$(DefineConstants.Contains(UNOBFUSCATED))">
     <Copy SourceFiles="$(OutputPath)reobfuscated/$(AssemblyName)-$(GameVersion).dll" DestinationFolder="$(AmongUs)/BepInEx/plugins/" />
-    <Copy SourceFiles="$(OutputPath)reobfuscated/$(AssemblyName)-$(GameVersion).dll" DestinationFolder="$(OutputPath)/../../../../bin/" />
+    <Copy SourceFiles="$(OutputPath)reobfuscated/$(AssemblyName)-$(GameVersion).dll" DestinationFolder="$(SolutionDir)bin/" />
+  </Target>
+
+  <Target Name="PostBuild" AfterTargets="PostBuildEvent" Condition="$(DefineConstants.Contains(UNOBFUSCATED))">
+    <Exec Command="copy /Y &quot;$(OutputPath)$(AssemblyName).dll&quot; &quot;$(AmongUs)/BepInEx/plugins/$(AssemblyName)-$(GameVersion).dll&quot;" />
+    <Exec Command="copy /Y &quot;$(OutputPath)$(AssemblyName).dll&quot; &quot;$(SolutionDir)bin/$(AssemblyName)-$(GameVersion).dll&quot;" />
   </Target>
 </Project>
