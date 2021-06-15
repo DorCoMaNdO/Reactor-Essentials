@@ -31,9 +31,9 @@ namespace Essentials
             OldHeight = oldHeight;
 
             OldBottomLeft = new Vector2(-OldWidth / 2, -OldHeight / 2);
-            OldBottomRight = HudPosition.GetAlignedOffset(OldBottomLeft, HudAlignment.BottomRight);
-            OldTopLeft = HudPosition.GetAlignedOffset(OldBottomLeft, HudAlignment.TopLeft);
-            OldTopRight = HudPosition.GetAlignedOffset(OldBottomLeft, HudAlignment.TopRight);
+            OldBottomRight = HudPosition.GetAlignedOffset(in OldBottomLeft, HudAlignment.BottomRight);
+            OldTopLeft = HudPosition.GetAlignedOffset(in OldBottomLeft, HudAlignment.TopLeft);
+            OldTopRight = HudPosition.GetAlignedOffset(in OldBottomLeft, HudAlignment.TopRight);
             OldTop = new Vector2(0, -OldBottomLeft.y);
             OldBottom = new Vector2(0, OldBottomLeft.y);
             OldLeft = new Vector2(OldBottomLeft.x, 0);

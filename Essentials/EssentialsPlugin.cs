@@ -25,12 +25,14 @@ namespace Essentials
 
         public override void Load()
         {
-            PluginSingleton<EssentialsPlugin>.Instance = this;
-
             Harmony.PatchAll();
+
+#if !S20210615
+            PluginSingleton<EssentialsPlugin>.Instance = this;
 
             RegisterInIl2CppAttribute.Register();
             RegisterCustomRpcAttribute.Register(this);
+#endif
 
             ReactorVersionShower.TextUpdated += (text) =>
             {

@@ -118,7 +118,7 @@ namespace Essentials.UI
         /// <param name="offset">Offset to align</param>
         /// <param name="alignment">Alignment position</param>
         /// <returns>The offset adjusted to the corresponding alignment</returns>
-        public static Vector2 GetAlignedOffset(Vector2 offset, HudAlignment alignment)
+        public static Vector2 GetAlignedOffset(in Vector2 offset, HudAlignment alignment)
         {
             return alignment switch
             {

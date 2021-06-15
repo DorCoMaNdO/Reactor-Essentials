@@ -1,0 +1,15 @@
+<Project>
+  <Choose>
+    <When Condition="!$(DefineConstants.Contains(UNOBFUSCATED))">
+      <ItemGroup>
+        <Deobfuscate Include="$(AmongUs)\BepInEx\plugins\Reactor-$(GameVersion).dll" />
+      </ItemGroup>
+    </When>
+    <When Condition="$(DefineConstants.Contains(UNOBFUSCATED))">
+      <ItemGroup>
+        <Reference Include="$(AmongUs)\BepInEx\plugins\Reactor-$(GameVersion).dll" Condition="Exists('$(AmongUs)\BepInEx\plugins\Reactor-$(GameVersion).dll')" />
+        <Reference Include="$(AmongUs)\BepInEx\plugins\Reactor.dll" Condition="Exists('$(AmongUs)\BepInEx\plugins\Reactor.dll')" />
+      </ItemGroup>
+    </When>
+  </Choose>
+</Project>

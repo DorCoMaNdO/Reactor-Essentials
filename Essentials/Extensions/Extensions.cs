@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Linq;
 using UnhollowerBaseLib;
 using UnityEngine;
 
@@ -69,38 +70,69 @@ namespace Essentials.Extensions
         }
 
         /// <summary>
-        /// Gets translated strings from <see cref="StringNames"/> (an instance of <see cref="TranslationController"/> has to exist).
+        /// Gets translated text from <see cref="StringNames"/> (an instance of <see cref="TranslationController"/> has to exist).
         /// </summary>
         /// <param name="str">String name to retrieve</param>
         /// <param name="parts">Elements to pass for formatting</param>
-        /// <returns>The translated value of <see cref="str"/></returns>
+        /// <returns>The translated value of <paramref name="str"/></returns>
         public static string GetText(this StringNames str, params object[] parts)
         {
-            return DestroyableSingleton<TranslationController>.Instance?.GetString(str, (Il2CppReferenceArray<Il2CppSystem.Object>)parts) ?? "STRMISS";
+            return DestroyableSingleton<TranslationController>.Instance.GetString(str, parts);
+        }
+
+        /// <summary>
+        /// Gets translated text from <see cref="StringNames"/>, <paramref name="defaultStr"/> is returned if a translation or an instance of <see cref="TranslationController"/> does not exist.
+        /// </summary>
+        /// <param name="str">String name to retrieve</param>
+        /// <param name="defaultStr">Default string when translation is missing</param>
+        /// <param name="parts">Elements to pass for formatting</param>
+        /// <returns>The translated value of <paramref name="str"/></returns>
+        public static string GetTextWithDefault(this StringNames str, string defaultStr, params object[] parts)
+        {
+            return DestroyableSingleton<TranslationController>.Instance.GetStringWithDefault(str, defaultStr, parts);
+        }
+
+        /// <summary>
+        /// An implementation of <see cref="TranslationController.GetString(StringNames, Il2CppReferenceArray{Il2CppSystem.Object})"/> that handles IL2CPP casting.
+        /// </summary>
+        /// <param name="translationController">An instance of <see cref="TranslationController"/></param>
+        /// <param name="str">String name to retrieve</param>
+        /// <param name="parts">Elements to pass for formatting</param>
+        /// <returns>The translated value of <paramref name="str"/></returns>
+        public static string GetString(this TranslationController translationController, StringNames str, params object[] parts)
+        {
+            return translationController != null ? translationController.GetString(str, parts.Select(p => (Il2CppSystem.Object)p).ToArray()) : "STRMISS";
+        }
+
+        /// <summary>
+        /// An implementation of <see cref="TranslationController.GetString(StringNames, Il2CppReferenceArray{Il2CppSystem.Object})"/> that handles IL2CPP casting and default value when a translation does not exist.
+        /// </summary>
+        /// <param name="translationController">An instance of <see cref="TranslationController"/></param>
+        /// <param name="str">String name to retrieve</param>
+        /// <param name="defaultStr">Default string when translation is missing</param>
+        /// <param name="parts">Elements to pass for formatting</param>
+        /// <returns>The translated value of <paramref name="str"/></returns>
+        public static string GetStringWithDefault(this TranslationController translationController, StringNames str, string defaultStr, params object[] parts)
+        {
+            string text = translationController.GetString(str, parts);
+
+            return /*str == StringNames.NoTranslation &&*/ text.Equals("STRMISS", StringComparison.Ordinal) && !string.IsNullOrEmpty(defaultStr) ? string.Format(defaultStr, parts) : text;
         }
 
         /// <summary>
         /// Converts X, Y of <see cref="Vector3"/> to <see cref="Vector2"/>.
         /// </summary>
-        public static Vector2 ToVector2(this Vector3 vector)
+        public static Vector2 ToVector2(in this Vector3 vector)
         {
             return vector;
         }
 
         /// <summary>
-        /// Converts X, Y of <see cref="Vector2"/> to <see cref="Vector3"/> with specified Z.
+        /// Converts X, Y of <see cref="Vector2"/> to <see cref="Vector3"/> with specified Z (default 0).
         /// </summary>
-        public static Vector3 ToVector3(this Vector2 vector, float z)
+        public static Vector3 ToVector3(in this Vector2 vector, float z = 0F)
         {
             return new Vector3(vector.x, vector.y, z);
-        }
-
-        /// <summary>
-        /// Converts X, Y of <see cref="Vector2"/> to <see cref="Vector3"/> (Z = 0).
-        /// </summary>
-        public static Vector3 ToVector3(this Vector2 vector)
-        {
-            return vector.ToVector3(0);
         }
     }
 }

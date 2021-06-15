@@ -175,8 +175,9 @@ namespace Essentials.Options
 
             private static void Postfix(ref string __result)
             {
-                int firstNewline = __result.IndexOf('\n');
-                StringBuilder sb = new StringBuilder(ClearDefaultHudText ? __result.Substring(0, firstNewline + 1) : __result);
+                int firstNewline = __result.IndexOf("\r\n");
+                if (firstNewline == -1) firstNewline = __result.IndexOf('\n');
+                StringBuilder sb = new StringBuilder(ClearDefaultHudText ? $"{__result.Substring(0, firstNewline)}\n" : __result);
 
 #if S20201209 || S20210305 || S202103313
                 if (ShamelessPlug) sb.AppendLine("[FF1111FF]DorCoMaNdO on GitHub/Twitter/Twitch[]");
@@ -353,7 +354,7 @@ namespace Essentials.Options
 #if S20201209 || S20210305 || S202103313
             hudManager.GameSettings.scale = HudTextScale;
 #else
-            hudManager.GameSettings.fontSize = HudTextFontSize;
+            hudManager.GameSettings.fontSizeMin = hudManager.GameSettings.fontSizeMax = hudManager.GameSettings.fontSize = HudTextFontSize;
 #endif
 
             const float XOffset = 0.066666F, YOffset = 0.1F;

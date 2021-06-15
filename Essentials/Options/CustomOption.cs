@@ -151,7 +151,7 @@ namespace Essentials.Options
 #if S20201209 || S20210305 || S202103313
         public static Func<CustomOption, string, string, string> DefaultHudStringFormat = (_, name, value) => $"{name}: {value}[]";
 #else
-        public static Func<CustomOption, string, string, string> DefaultHudStringFormat = (_, name, value) => $"{name}: {value}";
+        public static Func<CustomOption, string, string, string> DefaultHudStringFormat = (_, name, value) => $"<color=#FFFFFFFF>{name}: {value}</color>";
 #endif
         /// <summary>
         /// The string format reflecting the option name and value, result returned by <see cref="ToString"/>.
