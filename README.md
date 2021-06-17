@@ -34,3 +34,5 @@ Essentials depends on Reactor, follow installation steps 1 and 2 before proceedi
 2. Edit the `build all.bat` script (in the root folder of the solution) so that it would only contain the Among Us versions you're targeting.
 3. Run `build all.bat` (alternatively, in Visual Studio you can use `Build` -> `Batch Build...` from the toolbar and select all the target versions and then `Build`, running `build all.bat` may still be required when Reactor is updated).
 4. The compiled binary will be copied to the `plugins` folder of your targeted Among Us versions, as well as a `bin` folder in the solution's folder.
+
+*This mod is not affiliated with Among Us or Innersloth LLC, and the content contained therein is not endorsed or otherwise sponsored by Innersloth LLC. Portions of the materials contained herein are property of Innersloth LLC. © Innersloth LLC.*
