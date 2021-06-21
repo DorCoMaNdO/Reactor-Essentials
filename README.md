@@ -16,7 +16,7 @@ Please configure notifications for future releases (`Watch` -> `Custom` -> `Rele
 This guide assumes Reactor.OxygenFilter.MSBuild is being used.
 1. Open your project file (`.csproj`).
 2. Add or locate an `ItemGroup` tag.
-3. Add the following line: `<Deobfuscate Include="$(AmongUs)\BepInEx\plugins\Essentials-$(GameVersion).dll" />`
+3. Add the following line: `<Reference Include="$(AmongUs)\BepInEx\plugins\Essentials-$(GameVersion).dll" />`
 4. If using Visual Studio, building your project once with `dotnet build` may be required due to a Mono.Cecil issue present in Reactor.OxygenFilter.MSBuild.
 5. While a guide or demo is not currently available, most types and methods contain documentation, the current key features are under the `Essentials.Options` and `Essentials.UI` namespaces.
 
@@ -35,4 +35,4 @@ Essentials depends on Reactor, follow installation steps 1 and 2 before proceedi
 3. Run `build all.bat` (alternatively, in Visual Studio you can use `Build` -> `Batch Build...` from the toolbar and select all the target versions and then `Build`, running `build all.bat` may still be required when Reactor is updated).
 4. The compiled binary will be copied to the `plugins` folder of your targeted Among Us versions, as well as a `bin` folder in the solution's folder.
 
-*This mod is not affiliated with Among Us or Innersloth LLC, and the content contained therein is not endorsed or otherwise sponsored by Innersloth LLC. Portions of the materials contained herein are property of Innersloth LLC. © Innersloth LLC.*
+*This mod is not affiliated with Among Us or Innersloth LLC, and the content contained therein is not endorsed or otherwise sponsored by Innersloth LLC. Portions of the materials contained herein are property of Innersloth LLC. Â© Innersloth LLC.*
