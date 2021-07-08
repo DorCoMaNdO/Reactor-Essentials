@@ -1,9 +1,7 @@
 ﻿using BepInEx;
 using BepInEx.IL2CPP;
-using BepInEx.Logging;
 using Essentials;
 using Essentials.Options;
-//using Essentials.Rpc;
 using Essentials.UI;
 using HarmonyLib;
 using Hazel;
