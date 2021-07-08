@@ -2,9 +2,9 @@
   <PropertyGroup>
     <TargetFramework>netstandard2.1</TargetFramework>
     <LangVersion>latest</LangVersion>
-    <Version>0.2.0-dev13</Version>
+    <Version>1.0.1</Version>
 
-    <Description>Among Us modding essentials</Description>
+    <Description>Impostor conversion plugin</Description>
     <Authors>CoMaNdO</Authors>
     <Configurations>S20201209;S20210305;S202103313;S20210412;S20210510;S20210615;S20210630</Configurations>
 
@@ -12,6 +12,12 @@
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
     <NoWarn>1701;1702;</NoWarn>
   </PropertyGroup>
+  
+  <ItemGroup>
+    <EmbeddedResource Include="Resources\Button.png" />
+
+    <ProjectReference Include="..\Essentials\Essentials.csproj" />
+  </ItemGroup>
 
   <Import Project="../AmongUs.props" />
   <Import Project="../Reactor.props" />

@@ -234,6 +234,11 @@ namespace Essentials.UI
             KillButtonManager.TimerText.enabled = false;
             KillButtonManager.TimerText.gameObject.SetActive(false);
 
+#if S20210630
+            KillButtonManager.killText.enabled = false;
+            KillButtonManager.killText.gameObject.SetActive(false);
+#endif
+
             SetVisible(HudVisible && Visible);
 
             if (ButtonSprite) KillButtonManager.renderer.sprite = ButtonSprite;

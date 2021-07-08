@@ -70,48 +70,48 @@ namespace Essentials.Extensions
         }
 
         /// <summary>
-        /// Gets translated text from <see cref="StringNames"/> (an instance of <see cref="TranslationController"/> has to exist).
+        /// Gets translated text from <see cref="StringNames"/> (do not use on plugin load).
         /// </summary>
         /// <param name="str">String name to retrieve</param>
         /// <param name="parts">Elements to pass for formatting</param>
-        /// <returns>The translated value of <paramref name="str"/></returns>
+        /// <returns>The translated value of <paramref name="str"/> or "STRMISS" when untranslated or when an instance of <see cref="TranslationController"/> does not exist or does not have an instance of <see cref="LanguageUnit"/> assigned to <see cref="TranslationController.CurrentLanguage"/> or <see cref="TranslationController.FallbackLanguage"/>.</returns>
         public static string GetText(this StringNames str, params object[] parts)
         {
             return DestroyableSingleton<TranslationController>.Instance.GetString(str, parts);
         }
 
         /// <summary>
-        /// Gets translated text from <see cref="StringNames"/>, <paramref name="defaultStr"/> is returned if a translation or an instance of <see cref="TranslationController"/> does not exist.
+        /// Gets translated text from <see cref="StringNames"/> or the default value when a translation does not exist.
         /// </summary>
         /// <param name="str">String name to retrieve</param>
         /// <param name="defaultStr">Default string when translation is missing</param>
         /// <param name="parts">Elements to pass for formatting</param>
-        /// <returns>The translated value of <paramref name="str"/></returns>
+        /// <returns>The translated value of <paramref name="str"/> or <paramref name="defaultStr"/> when untranslated or when an instance of <see cref="TranslationController"/> does not exist or does not have an instance of <see cref="LanguageUnit"/> assigned to <see cref="TranslationController.CurrentLanguage"/> or <see cref="TranslationController.FallbackLanguage"/>.</returns>
         public static string GetTextWithDefault(this StringNames str, string defaultStr, params object[] parts)
         {
             return DestroyableSingleton<TranslationController>.Instance.GetStringWithDefault(str, defaultStr, parts);
         }
 
         /// <summary>
-        /// An implementation of <see cref="TranslationController.GetString(StringNames, Il2CppReferenceArray{Il2CppSystem.Object})"/> that handles IL2CPP casting.
+        /// An implementation of <see cref="TranslationController.GetString(StringNames, Il2CppReferenceArray{Il2CppSystem.Object})"/> that handles IL2CPP casting (do not use on plugin load).
         /// </summary>
         /// <param name="translationController">An instance of <see cref="TranslationController"/></param>
         /// <param name="str">String name to retrieve</param>
         /// <param name="parts">Elements to pass for formatting</param>
-        /// <returns>The translated value of <paramref name="str"/></returns>
+        /// <returns>The translated value of <paramref name="str"/> or "STRMISS" when untranslated or when an instance of <see cref="TranslationController"/> does not exist or does not have an instance of <see cref="LanguageUnit"/> assigned to <see cref="TranslationController.CurrentLanguage"/> or <see cref="TranslationController.FallbackLanguage"/>.</returns>
         public static string GetString(this TranslationController translationController, StringNames str, params object[] parts)
         {
-            return translationController != null ? translationController.GetString(str, parts.Select(p => (Il2CppSystem.Object)p).ToArray()) : "STRMISS";
+            return translationController != null && (translationController.CurrentLanguage != null || translationController.FallbackLanguage != null) ? translationController.GetString(str, parts.Select(p => (Il2CppSystem.Object)p).ToArray()) : "STRMISS";
         }
 
         /// <summary>
-        /// An implementation of <see cref="TranslationController.GetString(StringNames, Il2CppReferenceArray{Il2CppSystem.Object})"/> that handles IL2CPP casting and default value when a translation does not exist.
+        /// An implementation of <see cref="TranslationController.GetStringWithDefault(StringNames, string, Il2CppReferenceArray{Il2CppSystem.Object})"/> that handles IL2CPP casting and default value when a translation does not exist.
         /// </summary>
         /// <param name="translationController">An instance of <see cref="TranslationController"/></param>
         /// <param name="str">String name to retrieve</param>
         /// <param name="defaultStr">Default string when translation is missing</param>
         /// <param name="parts">Elements to pass for formatting</param>
-        /// <returns>The translated value of <paramref name="str"/></returns>
+        /// <returns>The translated value of <paramref name="str"/> or <paramref name="defaultStr"/> when untranslated or when an instance of <see cref="TranslationController"/> does not exist or does not have an instance of <see cref="LanguageUnit"/> assigned to <see cref="TranslationController.CurrentLanguage"/> or <see cref="TranslationController.FallbackLanguage"/>.</returns>
         public static string GetStringWithDefault(this TranslationController translationController, StringNames str, string defaultStr, params object[] parts)
         {
             string text = translationController.GetString(str, parts);

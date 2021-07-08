@@ -27,7 +27,7 @@ namespace Essentials
         {
             Harmony.PatchAll();
 
-#if !S20210615
+#if !S20210615 && !S20210630
             PluginSingleton<EssentialsPlugin>.Instance = this;
 
             RegisterInIl2CppAttribute.Register();

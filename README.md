@@ -4,29 +4,30 @@ Essentials is a modding library for Among Us with APIs to speed up and ease deve
 Currently, the key features of Essentials are custom options and gameplay buttons, with more planned in the future to improve mod compatibility.
 
 ## Installation
-**NOTE:** At the moment, official builds are only compiled for the Steam client.
-1. Install [BepInEx](https://docs.reactor.gg/docs/basic/install_bepinex).
-2. Install [Reactor](https://docs.reactor.gg/docs/basic/install_reactor) ([CI 38 or newer](https://github.com/NuclearPowered/Reactor/actions/runs/593649307) for Essentials 0.1.1+, [CI 45](https://github.com/NuclearPowered/Reactor/actions/runs/636023321) for Among Us version 2021.3.5s, [CI 47 or newer](https://github.com/NuclearPowered/Reactor/actions/runs/723875068) for Among Us version 2021.3.31.3s).
+**NOTE:** At the moment, official builds are only compiled for the Steam client, however builds for 2021.5.10 or newer should work on all platforms.
+1. Install [BepInEx](https://docs.reactor.gg/quick_start/install_bepinex).
+2. Install [Reactor](https://docs.reactor.gg/quick_start/install_reactor) ([CI 38](https://github.com/NuclearPowered/Reactor/actions/runs/593649307) for Essentials 0.1.1+, [CI 45](https://github.com/NuclearPowered/Reactor/actions/runs/636023321) for Among Us version 2021.3.5s, [CI 47](https://github.com/NuclearPowered/Reactor/actions/runs/723875068) for 2021.3.31.3s, [CI 55](https://github.com/NuclearPowered/Reactor/actions/runs/748060171) for 2021.4.12s, [CI 56](https://github.com/NuclearPowered/Reactor/actions/runs/791867842) for 2021.4.14s, [CI 64](https://github.com/NuclearPowered/Reactor/actions/runs/926109011) for 2021.5.10s, [CI 67 or newer](https://github.com/NuclearPowered/Reactor/actions/runs/940598811) for 2021.6.15s and 2021.6.30s).
 3. Grab the [latest release](https://github.com/DorCoMaNdO/Reactor-Essentials/releases/latest) for your client version (support for older clients may be dropped, in that case browse [previous releases](https://github.com/DorCoMaNdO/Reactor-Essentials/releases)).
 4. Place the downloaded release in `Among Us/BepInEx/plugins/` (same steps as installing Reactor).
 
 ## Development
 To develop plugins with Essentials, Essentials needs to be installed, follow the steps above before proceeding.
 Please configure notifications for future releases (`Watch` -> `Custom` -> `Releases`) to keep your projects up to date with bug fixes and new features.
-This guide assumes Reactor.OxygenFilter.MSBuild is being used.
 1. Open your project file (`.csproj`).
 2. Add or locate an `ItemGroup` tag.
-3. Add the following line: `<Deobfuscate Include="$(AmongUs)\BepInEx\plugins\Essentials-$(GameVersion).dll" />`
-4. If using Visual Studio, building your project once with `dotnet build` may be required due to a Mono.Cecil issue present in Reactor.OxygenFilter.MSBuild.
-5. While a guide or demo is not currently available, most types and methods contain documentation, the current key features are under the `Essentials.Options` and `Essentials.UI` namespaces.
+3. Add the appropriate line 
+* When using an obfuscated version (2021.4.14s or older, when using Reactor.OxygenFilter.MSBuild): `<Deobfuscate Include="$(AmongUs)\BepInEx\plugins\Essentials-$(GameVersion).dll" />`
+* For any other version: `<Reference Include="$(AmongUs)\BepInEx\plugins\Essentials-$(GameVersion).dll" />`
+4. Build. Note that if you are using Visual Studio and modding an obfuscated version, building your project once with `dotnet build` may be required due to a Mono.Cecil issue present in Reactor.OxygenFilter.MSBuild.
+5. While a guide is not currently available, there's a demo project "Convert", also most types and methods contain documentation, the current key features are under the `Essentials.Options` and `Essentials.UI` namespaces.
 
 ## Building Essentials
 Newer versions of Essentials use configurations based on Among Us target version(s) and override the `AmongUs` environment variable as a result.
 Essentials depends on Reactor, follow installation steps 1 and 2 before proceeding.
 
 ### Building for a single Among Us version
-1. [Set up the `AmongUs` environment variable](https://docs.reactor.gg/docs/basic/install_netsdk_example_template#setup-among-us-environment-variable)
-2. Select and build the project configuration targeting your target version, `dotnet build -c CONFIGURATION` (where `CONFIGURATION` is the configuration name, ex: `S20210412`), may be required due to a Mono.Cecil issue present in Reactor.OxygenFilter.MSBuild.
+1. [Set up the `AmongUs` environment variable](https://docs.reactor.gg/quick_start/install_netsdk_template#setup-among-us-environment-variable)
+2. Select and build the project configuration targeting your target version, building with `dotnet build -c CONFIGURATION` (where `CONFIGURATION` is the configuration name, ex: `S20210412`), may be required when building for an obfuscated version due to a Mono.Cecil issue present in Reactor.OxygenFilter.MSBuild.
 3. The compiled binary will be copied to the `plugins` folder of your targeted Among Us version, as well as a `bin` folder in the solution's folder.
 
 ### Building for multiple Among Us versions

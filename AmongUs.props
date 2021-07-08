@@ -27,6 +27,10 @@
     <GameVersion>2021.6.15s</GameVersion>
   </PropertyGroup>
 
+  <PropertyGroup Condition="'$(Configuration)'=='S20210630'">
+    <GameVersion>2021.6.30s</GameVersion>
+  </PropertyGroup>
+  
   <PropertyGroup Condition="$(Mappings) == ''">
     <DefineConstants>$(DefineConstants);UNOBFUSCATED</DefineConstants>
   </PropertyGroup>

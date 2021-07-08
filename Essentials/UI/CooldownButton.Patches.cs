@@ -7,7 +7,7 @@ namespace Essentials.UI
     {
 #if S20201209 || S20210305
         [HarmonyPatch(typeof(HudManager.CoShowIntro__d), nameof(HudManager.CoShowIntro__d.MoveNext))]
-#elif S202103313 || S20210510
+#elif S202103313 || S20210510 || S20210630
         [HarmonyPatch(typeof(HudManager._CoShowIntro_d__56), nameof(HudManager._CoShowIntro_d__56.MoveNext))]
 #elif S20210615 || UNOBFUSCATED
         [HarmonyPatch(typeof(HudManager._CoShowIntro_d__57), nameof(HudManager._CoShowIntro_d__57.MoveNext))]
